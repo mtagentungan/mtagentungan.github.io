@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kirim WA Cepat</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h2>Kirim Pesan WhatsApp</h2>
+  
+  <label>Nomor Tujuan:</label>
+  <input type="tel" id="nomor" placeholder="6285728389595" value="6285728389595">
+  
+  <label>Tulis Pesan:</label>
+  <textarea id="pesan" placeholder="Tulis pesan di sini..."></textarea>
+  
+  <button onclick="kirimWA()">Kirim ke WhatsApp</button>
+
+  <script>
+    function kirimWA() {
+      let nomor = document.getElementById('nomor').value.trim();
+      const pesan = document.getElementById('pesan').value.trim();
+      
+      if(!nomor || !pesan){
+        alert('Nomor dan pesan harus diisi');
+        return;
+      }
+      
+      // Hapus 0 di depan, ganti jadi 62
+      if(nomor.startsWith('0')){
+        nomor = '62' + nomor.substring(1);
+      }
+      
+      // Hapus spasi, +, - di nomor
+      nomor = nomor.replace(/[\s+-]/g, '');
+      
+      // Encode pesan biar enter & spasi aman
+      const text = encodeURIComponent(pesan);
+      
+      // Buka WA
+      window.open(`https://wa.me/${nomor}?text=${text}`, '_blank');
+    }
+  </script>
+</body>
+</html>
