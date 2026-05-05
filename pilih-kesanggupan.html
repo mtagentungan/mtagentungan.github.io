@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pilih Kesanggupan</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h2 id="salam">Assalamu'alaikum</h2>
+  <h3 style="text-align:center; color:var(--text-secondary); margin-top:-20px; margin-bottom:30px;">Pilih program kesanggupan Anda</h3>
+  
+  <div id="listKesanggupanUser"></div>
+
+  <button class="btn-secondary" onclick="logout()">LOGOUT</button>
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbz9qxsXcG6l_H10knBDfDsen-wSpfP3z-Cr5uMBJnKlaG_1J441xRutpiBK4iZkwe76/exec'; // GANTI INI
+const user = JSON.parse(localStorage.getItem('user'));
+if(!user || user
