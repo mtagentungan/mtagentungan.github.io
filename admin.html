@@ -36,6 +36,20 @@
     <button class="btn btn-secondary" onclick="closeM('modal-a')">BATAL</button>
 </div>
 
+    <div id="modal-aksi-anggota" class="card modal" style="display:none; position:fixed; top:10%; left:5%; width:90%; z-index:100; background:#161b22">
+    <h3 id="nama-target-aksi" style="color:var(--accent); text-align:center">Nama Anggota</h3>
+    <button class="btn" onclick="openNyicilAdmin()">+ INPUT NYICIL</button>
+    <button class="btn btn-secondary" onclick="kirimWAAdmin()">KIRIM WA KE ANGGOTA</button>
+    
+    <div id="form-nyicil-admin" style="display:none; margin-top:15px; border-top:1px solid var(--border); padding-top:10px;">
+        <label>Nominal Cicilan (Rp)</label>
+        <input type="number" id="nom-admin" placeholder="0">
+        <button class="btn" onclick="prosesBayarAdmin()">SIMPAN PEMBAYARAN</button>
+    </div>
+    
+    <button class="btn btn-secondary" onclick="closeM('modal-aksi-anggota')" style="margin-top:20px">TUTUP</button>
+    </div>
+
 <script>
     const url = localStorage.getItem("SCRIPT_URL");
     const user = JSON.parse(sessionStorage.getItem("user"));
