@@ -3,37 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sci-Fi Web App</title>
+    <title>Login - System</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="app-container">
     <header>
-        <h1>Core System</h1>
+        <h1>Dzikra System</h1>
     </header>
 
-    <div class="card">
-        <label>Input Data Barang</label>
-        <input type="text" placeholder="Nama Barang..." id="nama">
+    <div class="card" id="login-box">
+        <label>Silakan masukan username dan PIN anda</label>
         
-        <label>Jumlah Stok</label>
-        <input type="number" placeholder="0" id="stok">
+        <input type="text" id="username" placeholder="Username" autocomplete="off">
+        <input type="password" id="pin" placeholder="PIN (Angka)" inputmode="numeric">
         
-        <button class="btn" onclick="simpanData()">Update Database</button>
-    </div>
-
-    <div class="card">
-        <label>Status Sistem</label>
-        <p class="status" id="display-status">Menunggu koneksi...</p>
-        <button class="btn btn-secondary">Cek Riwayat</button>
+        <button class="btn" onclick="prosesLogin()" id="btn-login">LOGIN SYSTEM</button>
+        <p class="status" id="msg"></p>
     </div>
 </div>
 
 <script>
-    function simpanData() {
-        document.getElementById('display-status').innerHTML = "Mengirim data ke Google Sheets...";
-        // Di sini nanti Anda hubungkan dengan fungsi fetch() ke Google Apps Script
+    const WEB_APP_URL = "URL_GAS_ANDA_DISINI";
+
+    function prosesLogin() {
+        const user = document.getElementById("username").value;
+        const pin = document.getElementById("pin").value;
+        const msg = document.getElementById("msg");
+        const btn = document.getElementById("btn-login");
+
+        if(!user || !pin) {
+            msg.innerText = "Isi semua field!";
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "AUTHENTICATING...";
+        msg.innerText = "Menghubungkan ke server...";
+
+        fetch(WEB_APP_URL, {
+            method: "POST",
+            body: JSON.stringify({ username: user, pin: pin })
+        })
+        .then(res => res.json())
+        .then(res => {
+            if(res.status === "success") {
+                // Simpan data login di session browser
+                sessionStorage.setItem("isLoggedIn", "true");
+                sessionStorage.setItem("userData", JSON.stringify(res));
+
+                msg.style.color = "#00d2ff";
+                msg.innerText = "Login Berhasil! Mengalihkan...";
+
+                // Arahkan berdasarkan role
+                setTimeout(() => {
+                    if(res.role === "admin") {
+                        window.location.href = "admin.html";
+                    } else {
+                        window.location.href = "anggota.html";
+                    }
+                }, 1000);
+            } else {
+                msg.style.color = "#ff4b2b";
+                msg.innerText = res.message;
+                btn.disabled = false;
+                btn.innerText = "LOGIN SYSTEM";
+            }
+        })
+        .catch(err => {
+            msg.innerText = "Error koneksi!";
+            btn.disabled = false;
+            console.error(err);
+        });
     }
 </script>
 
