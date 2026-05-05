@@ -5,35 +5,30 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="loader">
-    <div class="spinner"></div>
-    <div class="loading-text">Menghubungkan ke Sistem...</div>
-</div>
+<div id="loader"><div class="spinner"></div><div style="color:var(--accent);margin-top:15px;letter-spacing:2px;font-size:10px">SYNCING DATA...</div></div>
 
 <div class="app-container">
-    <header><h1 id="nama-admin">ADMIN</h1></header>
+    <header><h1 id="adm-name">ADMIN PANEL</h1></header>
     <div style="display:flex; gap:10px; margin-bottom:15px">
-        <button class="btn" style="font-size:0.7rem" onclick="openM('modal-k')">+ KESANGGUPAN</button>
-        <button class="btn" style="font-size:0.7rem" onclick="openM('modal-a')">+ ANGGOTA</button>
+        <button class="btn" style="font-size:0.7rem; padding:10px" onclick="openM('modal-k')">+ KESANGGUPAN</button>
+        <button class="btn" style="font-size:0.7rem; padding:10px" onclick="openM('modal-a')">+ ANGGOTA</button>
     </div>
     <div id="dash">Memuat data...</div>
-    <button class="btn btn-secondary" onclick="location.href='index.html'">LOGOUT</button>
+    <button class="btn btn-secondary" onclick="logout()">LOGOUT</button>
 </div>
 
-<div id="modal-k" class="card modal">
-    <label>NAMA KESANGGUPAN</label>
-    <input type="text" id="nk">
-    <label>TARGET KELOMPOK (Rp)</label>
-    <input type="number" id="tk">
-    <button class="btn" onclick="addK()">SIMPAN</button>
+<div id="modal-k" class="card" style="display:none; position:fixed; top:20%; left:5%; width:90%; z-index:100; background:#161b22">
+    <label>NAMA KESANGGUPAN</label><input type="text" id="nk">
+    <label>TARGET KELOMPOK</label><input type="number" id="tk">
+    <button class="btn" onclick="addK()">SIMPAN PROGRAM</button>
     <button class="btn btn-secondary" onclick="closeM('modal-k')">BATAL</button>
 </div>
 
-<div id="modal-a" class="card modal">
-    <label>NAMA / USERNAME / PIN / WA / TARGET</label>
+<div id="modal-a" class="card" style="display:none; position:fixed; top:10%; left:5%; width:90%; z-index:100; background:#161b22">
+    <label>NAMA / USER / PIN / WA / TARGET</label>
     <input type="text" id="an" placeholder="Nama Lengkap">
-    <input type="text" id="au" placeholder="Username Baru">
-    <input type="password" id="ap" placeholder="PIN Baru">
+    <input type="text" id="au" placeholder="Username">
+    <input type="password" id="ap" placeholder="PIN">
     <input type="number" id="aw" placeholder="628xxxx">
     <select id="sel-k"></select>
     <input type="number" id="at" placeholder="Target Pribadi">
@@ -43,37 +38,28 @@
 
 <script>
     const url = localStorage.getItem("SCRIPT_URL");
-    function showToast(pesan) {
-    const toast = document.createElement("div");
-    toast.innerText = pesan;
-    toast.style.cssText = `
-        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-        background: var(--accent); color: #000; padding: 10px 20px;
-        border-radius: 20px; font-weight: bold; z-index: 10000;
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-    }
-    
-    function openM(id) { 
-        document.getElementById(id).style.display='block';
-        if(id=='modal-a') loadPrograms();
-    }
+    const user = JSON.parse(sessionStorage.getItem("user"));
+    if(!user || user.role !== 'admin') window.location.href="index.html";
+
+    function setLoading(s) { document.getElementById("loader").style.display = s ? "flex" : "none"; }
+    function openM(id) { document.getElementById(id).style.display='block'; if(id=='modal-a') loadPrograms(); }
     function closeM(id) { document.getElementById(id).style.display='none'; }
 
     function loadDash() {
+        setLoading(true);
         fetch(url + "?action=getDashboardAdmin").then(r=>r.json()).then(data=>{
+            setLoading(false);
             let h = "";
             data.forEach(i => {
                 h += `<div class="card" style="text-align:center">
-                    <h3>${i.nama}</h3>
-                    <p>Terkumpul: Rp ${i.total.toLocaleString()}</p>
-                    <p style="color:var(--accent)">Sisa: Rp ${i.sisa.toLocaleString()}</p>
-                    <small>STATUS: ${i.status}</small>
+                    <h3 style="color:var(--accent);margin:0">${i.nama}</h3>
+                    <p style="font-size:0.8rem">Terkumpul: Rp ${i.total.toLocaleString()}</p>
+                    <p style="font-size:0.8rem;color:#ff4b2b">Sisa: Rp ${i.sisa.toLocaleString()}</p>
+                    <small>STATUS: ${i.status.toUpperCase()}</small>
                 </div>`;
             });
             document.getElementById("dash").innerHTML = h;
-        });
+        }).catch(()=>setLoading(false));
     }
 
     function loadPrograms() {
@@ -84,19 +70,16 @@
     }
 
     function addK() {
-        const body = { action: "addKesanggupan", id: Date.now(), nama: document.getElementById("nk").value, target: document.getElementById("tk").value };
-        fetch(url, { method:"POST", body: JSON.stringify(body) }).then(()=>location.reload());
+        setLoading(true);
+        fetch(url, { method:"POST", body: JSON.stringify({ action: "addKesanggupan", id: Date.now(), nama: document.getElementById("nk").value, target: document.getElementById("tk").value }) }).then(()=>location.reload());
     }
 
     function addA() {
-        const body = { 
-            action: "addAnggota", nama: document.getElementById("an").value, user: document.getElementById("au").value,
-            pin: document.getElementById("ap").value, wa: document.getElementById("aw").value,
-            program: document.getElementById("sel-k").value, target: document.getElementById("at").value
-        };
-        fetch(url, { method:"POST", body: JSON.stringify(body) }).then(()=>location.reload());
+        setLoading(true);
+        fetch(url, { method:"POST", body: JSON.stringify({ action: "addAnggota", nama: document.getElementById("an").value, user: document.getElementById("au").value, pin: document.getElementById("ap").value, wa: document.getElementById("aw").value, program: document.getElementById("sel-k").value, target: document.getElementById("at").value }) }).then(()=>location.reload());
     }
 
+    function logout() { sessionStorage.clear(); window.location.href="index.html"; }
     loadDash();
 </script>
 </body>
