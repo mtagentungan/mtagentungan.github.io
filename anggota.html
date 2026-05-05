@@ -1,58 +1,72 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anggota - Dzikra</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div style="margin-top: 20px;">
-    <button class="btn btn-secondary" id="btn-toggle-akun" onclick="togglePengaturan()" style="font-size: 0.8rem; border-style: dashed;">
-        ⚙️ PENGATURAN AKUN
-    </button>
 
-    <div id="area-pengaturan" class="card" style="display: none; margin-top: 15px; border: 1px dashed var(--accent);">
-        <label>USERNAME BARU</label>
-        <input type="text" id="new-user" placeholder="Ketik username...">
-        
-        <label>PIN BARU</label>
-        <input type="password" id="new-pin" placeholder="Ketik PIN baru..." inputmode="numeric">
-        
-        <button class="btn" onclick="updateAkun()" style="margin-top: 10px;">SIMPAN PERUBAHAN</button>
-        <button class="btn btn-secondary" onclick="togglePengaturan()" style="border:none; color: #ff4b2b;">BATAL</button>
-    </div>
-    </div>
-    
 <div id="loader"><div class="spinner"></div><div style="color:var(--accent);margin-top:15px;letter-spacing:2px;font-size:10px">UPDATING...</div></div>
 
 <div class="app-container">
-    <header><h1 id="sapa" style="font-size:1rem">Assalamu'alaikum...</h1></header>
-    
+    <header>
+        <h1 id="sapa" style="font-size:1rem">Assalamu'alaikum...</h1>
+    </header>
+
     <div class="card" style="text-align:center">
         <label id="prog-name">Memuat...</label>
         <p>Target: <b id="t-p">0</b> | Titip: <b id="t-b" style="color:#00ff88">0</b></p>
         <p style="border-top:1px solid var(--border);padding-top:10px">Sisa: <b id="t-s" style="color:#ff4b2b">0</b></p>
     </div>
 
-    <label>RIWAYAT PEMBAYARAN</label>
+    <label style="margin-left:5px">RIWAYAT PEMBAYARAN</label>
     <div id="riwayat" style="margin-bottom:20px"></div>
 
-    <div class="card" style="border: 1px solid var(--accent)">
-        <label>PENGATURAN AKUN (GANTI USER/PIN)</label>
-        <input type="text" id="new-user" placeholder="Username Baru">
-        <input type="password" id="new-pin" placeholder="PIN Baru" inputmode="numeric">
-        <button class="btn btn-secondary" onclick="updateAkun()" style="font-size:0.8rem">UPDATE DATA LOGIN</button>
+    <hr style="border:0; border-top:1px solid var(--border); margin: 20px 0;">
+
+    <div style="text-align: center;">
+        <button class="btn btn-secondary" id="btn-toggle-akun" onclick="togglePengaturan()" style="font-size: 0.75rem; border-style: dashed; width: auto; padding: 10px 20px;">
+            ⚙️ PENGATURAN AKUN
+        </button>
+
+        <div id="area-pengaturan" class="card" style="display: none; margin-top: 15px; border: 1px dashed var(--accent); text-align: left;">
+            <label>USERNAME BARU</label>
+            <input type="text" id="new-user" placeholder="Ketik username baru...">
+            
+            <label>PIN BARU</label>
+            <input type="password" id="new-pin" placeholder="Ketik PIN baru..." inputmode="numeric">
+            
+            <button class="btn" onclick="updateAkun()">SIMPAN PERUBAHAN</button>
+            <button class="btn btn-secondary" onclick="togglePengaturan()" style="border:none; color: #ff4b2b; margin-top:5px">BATAL</button>
+        </div>
     </div>
 
-    <button class="btn btn-secondary" onclick="logout()" style="margin-top:20px">LOGOUT</button>
+    <button class="btn btn-secondary" onclick="logout()" style="margin-top: 30px;">LOGOUT SYSTEM</button>
 </div>
 
 <script>
     const url = localStorage.getItem("SCRIPT_URL");
     const user = JSON.parse(sessionStorage.getItem("user"));
+    
     if(!user) window.location.href="index.html";
     document.getElementById("sapa").innerText = "Assalamu'alaikum mas " + user.nama;
 
     function setLoading(s) { document.getElementById("loader").style.display = s ? "flex" : "none"; }
+
+    // Fungsi Toggle Buka/Tutup Form
+    function togglePengaturan() {
+        const area = document.getElementById("area-pengaturan");
+        const btn = document.getElementById("btn-toggle-akun");
+        if (area.style.display === "none") {
+            area.style.display = "block";
+            btn.style.display = "none";
+        } else {
+            area.style.display = "none";
+            btn.style.display = "inline-block";
+        }
+    }
 
     function loadData() {
         setLoading(true);
@@ -63,8 +77,9 @@
             document.getElementById("t-b").innerText = res.terbayar.toLocaleString();
             let sisa = res.target - res.terbayar;
             document.getElementById("t-s").innerText = sisa <= 0 ? "SELESAI" : sisa.toLocaleString();
-            let h = ""; res.riwayat.forEach(r => h += `<div class="card" style="font-size:0.8rem;padding:10px;margin-bottom:5px"><b>${r.tanggal}</b> - Rp ${r.nominal.toLocaleString()}</div>`);
-            document.getElementById("riwayat").innerHTML = h || "<p style='text-align:center;font-size:0.7rem'>Belum ada data.</p>";
+            let h = ""; 
+            res.riwayat.forEach(r => h += `<div class="card" style="font-size:0.8rem;padding:10px;margin-bottom:5px"><b>${r.tanggal}</b> - Rp ${r.nominal.toLocaleString()}</div>`);
+            document.getElementById("riwayat").innerHTML = h || "<p style='text-align:center;font-size:0.7rem'>Belum ada riwayat titipan.</p>";
         }).catch(()=>setLoading(false));
     }
 
@@ -79,24 +94,10 @@
             body: JSON.stringify({ action: "updateProfile", oldUser: user.username, newUser: nU, newPin: nP })
         }).then(r=>r.json()).then(res=>{
             setLoading(false);
-            alert("Data berhasil diupdate! Silakan login ulang.");
+            alert("Data berhasil diupdate! Silakan login ulang dengan data baru.");
             logout();
         });
     }
-
-    function togglePengaturan() {
-    const area = document.getElementById("area-pengaturan");
-    const btn = document.getElementById("btn-toggle-akun");
-    
-    if (area.style.display === "none") {
-        area.style.display = "block";
-        btn.style.display = "none"; // Sembunyikan tombol utama saat form buka
-    } else {
-        area.style.display = "none";
-        btn.style.display = "block";
-    }
-    }
-    
 
     function logout() { sessionStorage.clear(); window.location.href="index.html"; }
     loadData();
