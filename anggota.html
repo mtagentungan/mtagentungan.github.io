@@ -57,7 +57,7 @@
     function kirimWA() {
         let sisa = (gData.target - gData.terbayar) <= 0 ? "*SELESAI*" : `Rp. ${gData.target - gData.terbayar}`;
         let rText = ""; gData.riwayat.forEach(r => rText += `${r.tanggal} - Rp. ${r.nominal}\n`);
-        let pesan = `Assalaamu'alaikum,\nMas ${user.nama.toUpperCase()}, rincian *${gData.program}*:\n\nKesanggupan: Rp. ${gData.target}\nTitip: Rp. ${gData.terbayar}\nKekurangan: ${sisa}\n\nRincian:\n${rText}\n> _Bendahara II_`;
+        let pesan = `Assalaamu'alaikum,\nMas ${user.nama.toUpperCase()}, rincian *${gData.program}* :\n\nKesanggupan: Rp. ${gData.target}\nTitip: Rp. ${gData.terbayar}\nKekurangan: ${sisa}\n\nRincian:\n${rText}\n> _Bendahara II_`;
         window.open(`https://api.whatsapp.com/send?phone=${user.wa}&text=${encodeURIComponent(pesan)}`, "_blank");
     }
 
