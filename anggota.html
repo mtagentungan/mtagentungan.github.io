@@ -9,26 +9,26 @@
 
 <div class="app-container">
     <header><h1 id="sapa" style="font-size:1rem">Assalamu'alaikum...</h1></header>
+    
     <div class="card" style="text-align:center">
         <label id="prog-name">Memuat...</label>
         <p>Target: <b id="t-p">0</b> | Titip: <b id="t-b" style="color:#00ff88">0</b></p>
         <p style="border-top:1px solid var(--border);padding-top:10px">Sisa: <b id="t-s" style="color:#ff4b2b">0</b></p>
     </div>
-    <div style="display:flex; gap:10px; margin-bottom:15px">
-        <button class="btn" onclick="toggleN()">+ NYICIL</button>
-        <button class="btn btn-secondary" onclick="kirimWA()">KIRIM WA</button>
-    </div>
-    <div id="form-n" class="card" style="display:none"><input type="number" id="nom" placeholder="Nominal Rp"><button class="btn" onclick="bayar()">KONFIRMASI</button></div>
+
     <label>RIWAYAT PEMBAYARAN</label>
-    <div id="riwayat"></div>
+    <div id="riwayat" style="margin-bottom:20px"></div>
+
+    <div class="card" style="border: 1px solid var(--accent)">
+        <label>PENGATURAN AKUN (GANTI USER/PIN)</label>
+        <input type="text" id="new-user" placeholder="Username Baru">
+        <input type="password" id="new-pin" placeholder="PIN Baru" inputmode="numeric">
+        <button class="btn btn-secondary" onclick="updateAkun()" style="font-size:0.8rem">UPDATE DATA LOGIN</button>
+    </div>
+
     <button class="btn btn-secondary" onclick="logout()" style="margin-top:20px">LOGOUT</button>
 </div>
-<div class="card">
-    <label>PENGATURAN AKUN</label>
-    <input type="text" id="new-user" placeholder="Username Baru">
-    <input type="password" id="new-pin" placeholder="PIN Baru" inputmode="numeric">
-    <button class="btn btn-secondary" onclick="updateAkun()" style="font-size:0.8rem">UPDATE USERNAME & PIN</button>
-</div>
+
 <script>
     const url = localStorage.getItem("SCRIPT_URL");
     const user = JSON.parse(sessionStorage.getItem("user"));
@@ -36,62 +36,39 @@
     document.getElementById("sapa").innerText = "Assalamu'alaikum mas " + user.nama;
 
     function setLoading(s) { document.getElementById("loader").style.display = s ? "flex" : "none"; }
-    function toggleN() { let f=document.getElementById("form-n"); f.style.display=f.style.display=='none'?'block':'none'; }
 
-    let gData = {};
     function loadData() {
         setLoading(true);
         fetch(`${url}?action=getDataAnggota&username=${user.username}`).then(r=>r.json()).then(res=>{
-            setLoading(false); gData = res;
+            setLoading(false);
             document.getElementById("prog-name").innerText = res.program;
             document.getElementById("t-p").innerText = res.target.toLocaleString();
             document.getElementById("t-b").innerText = res.terbayar.toLocaleString();
             let sisa = res.target - res.terbayar;
             document.getElementById("t-s").innerText = sisa <= 0 ? "SELESAI" : sisa.toLocaleString();
             let h = ""; res.riwayat.forEach(r => h += `<div class="card" style="font-size:0.8rem;padding:10px;margin-bottom:5px"><b>${r.tanggal}</b> - Rp ${r.nominal.toLocaleString()}</div>`);
-            document.getElementById("riwayat").innerHTML = h;
+            document.getElementById("riwayat").innerHTML = h || "<p style='text-align:center;font-size:0.7rem'>Belum ada data.</p>";
         }).catch(()=>setLoading(false));
     }
 
-    function bayar() {
-        let n = document.getElementById("nom").value; if(!n) return;
+    function updateAkun() {
+        const nU = document.getElementById("new-user").value;
+        const nP = document.getElementById("new-pin").value;
+        if(!nU || !nP) return alert("Isi Username dan PIN baru!");
+        
         setLoading(true);
-        fetch(url, { method:"POST", body: JSON.stringify({ action:"addBayar", username:user.username, program:gData.program, nominal:n }) }).then(()=>location.reload());
-    }
-
-    function kirimWA() {
-        let sisa = (gData.target - gData.terbayar) <= 0 ? "*SELESAI*" : `Rp. ${gData.target - gData.terbayar}`;
-        let rText = ""; gData.riwayat.forEach(r => rText += `${r.tanggal} - Rp. ${r.nominal}\n`);
-        let pesan = `Assalaamu'alaikum,\nMas ${user.nama.toUpperCase()}, rincian *${gData.program}* :\n\nKesanggupan: Rp. ${gData.target}\nTitip: Rp. ${gData.terbayar}\nKekurangan: ${sisa}\n\nRincian:\n${rText}\n> _Bendahara II_`;
-        window.open(`https://api.whatsapp.com/send?phone=${user.wa}&text=${encodeURIComponent(pesan)}`, "_blank");
+        fetch(url, {
+            method: "POST",
+            body: JSON.stringify({ action: "updateProfile", oldUser: user.username, newUser: nU, newPin: nP })
+        }).then(r=>r.json()).then(res=>{
+            setLoading(false);
+            alert("Data berhasil diupdate! Silakan login ulang.");
+            logout();
+        });
     }
 
     function logout() { sessionStorage.clear(); window.location.href="index.html"; }
     loadData();
-    
-function updateAkun() {
-    const nU = document.getElementById("new-user").value;
-    const nP = document.getElementById("new-pin").value;
-    if(!nU || !nP) return alert("Isi username dan PIN baru!");
-
-    setLoading(true);
-    fetch(url, {
-        method: "POST",
-        body: JSON.stringify({
-            action: "updateProfile",
-            oldUser: user.username,
-            newUser: nU,
-            newPin: nP
-        })
-    })
-    .then(r => r.json()).then(res => {
-        setLoading(false);
-        if(res.status == "success") {
-            alert("Akun berhasil diupdate! Silakan login ulang.");
-            logout();
-        }
-    });
-}
 </script>
 </body>
 </html>
