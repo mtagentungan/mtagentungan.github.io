@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Anggota</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h2 id="salamUser">Assalamu'alaikum</h2>
+  
+  <!-- Card Kesanggupan Kelompok, selalu muncul -->
+  <div class="card" id="cardKelompok" style="text-align:center;"></div>
+  
+  <!-- Card Data Pribadi -->
+  <div class="card" id="cardPribadi"></div>
+  
+  <!-- Rincian Angsuran -->
+  <h3 style="text-align:center; color:var(--text-primary);">Rincian Angsuran</h3>
+  <div id="listAngsuran"></div>
+
+  <button onclick="kirimWA()">KIRIM WA</button>
+  <button class="btn-secondary" onclick="kembali()">GANTI KESANGGUPAN</button>
+  <button class="btn-secondary" onclick="logout()">LOGOUT</button>
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbz9qxsXcG6l_H10knBDfDsen-wSpfP3z-Cr5uMBJnKlaG_1J441xRutpiBK4iZkwe76/exec'; // GANTI INI
+const user = JSON.parse(localStorage.getItem('user'));
+const idKsg = localStorage.getItem('id_ksg_user');
+if(!user ||!idKsg) location.href = 'index.html';
+
+let dataLengkap = {};
+
+window.onload = loadDataAnggota;
+
+function loadDataAnggota() {
+  fetch(GAS_URL + '?action=getAnggotaData', {
+    method: 'POST',
+    body: JSON.stringify({username: user.username, id_ksg: idKsg})
+  })
+  .then(r => r.json())
+  .then(d => {
+    dataLengkap = d;
+    
+    // 1. Salam
+    document.getElementById('salamUser').innerText = `Assalamu'alaikum mas ${d.nama}`;
+    
+    // 2. Card Kelompok
+    document.getElementById('cardKelompok').innerHTML = `
+      <h3>${d.namaKesanggupan}</h3>
+      <p style="line-height: 1.8;">
+        Total Terkumpul: <b>Rp ${d.totalTerkumpul.toLocaleString('id')}</b><br>
+        Sisa Kekurangan: <b>Rp ${d.sisaKelompok.toLocaleString('id')}</b>
+      </p>
+    `;
+    
+    // 3. Card Pribadi
+    const sisaText = d.sisa <= 0 ? '<b style="color:var(--accent-cyan)">SELESAI</b>' : `Rp ${d.sisa.toLocaleString('id')}`;
+    document.getElementById('cardPribadi').innerHTML = `
+      <p style="line-height: 2;">
+        Kesanggupan total anda <b>Rp ${d.kesanggupan.toLocaleString('id')}</b><br>
+        Sudah membayar <b>Rp ${d.totalBayar.toLocaleString('id')}</b><br>
+        Kekurangan ${sisaText}
+      </p>
+    `;
+    
+    // 4. List Angsuran
+    let listHtml = '';
+    if(d.rincian.length == 0) {
+      listHtml = '<div class="card"><p style="text-align:center">Belum ada angsuran</p></div>';
+    } else {
+      d.rincian.forEach(r => {
+        listHtml += `
+        <div class="card" style="padding: 15px;">
+          <p style="margin:0; display:flex; justify-content:space-between;">
+            <span>${r.tgl}</span>
+            <b>Rp ${Number(r.nominal).toLocaleString('id')}</b>
+          </p>
+        </div>`;
+      });
+    }
+    document.getElementById('listAngsuran').innerHTML = listHtml;
+  });
+}
+
+function kirimWA() {
+  const d = dataLengkap;
+  const sisaText = d.sisa <= 0 ? '*SELESAI*' : `Rp ${d.sisa.toLocaleString('id')}`;
+  
+  let rincianText = '';
+  d.rincian.slice().reverse().forEach(r => {
+    const tgl = new Date(r.tgl).toLocaleDateString('id-ID', {day:'2-digit', month:'2-digit', year:'2-digit'});
+    rincianText += `${tgl} - Rp ${Number(r.nominal).toLocaleString('id')}\n`;
+  });
+  
+  const pesan = `Assalaamu'alaikum,
+Mas ${d.nama}, berikut ini adalah rincian anda untuk kesanggupan *${d.namaKesanggupan}* :
+
+Kesanggupan: Rp.${Number(d.kesanggupan).toLocaleString('id')}
+Total titip: Rp.${d.totalBayar.toLocaleString('id')}
+Kekurangan: ${sisaText}
+
+Berikut rincian pembayaran:
+
+${rincianText}-----------------------------
+
+> _Bendahara II Kelompok Bancak_`;
+
+  const urlWA = `https://wa.me/${d.no_wa}?text=${encodeURIComponent(pesan)}`;
+  window.open(urlWA, '_blank');
+}
+
+function kembali() { location.href = 'pilih-kesanggupan.html'; }
+function logout() { localStorage.clear(); location.href = 'index.html'; }
+</script>
+
+</body>
+</html>
