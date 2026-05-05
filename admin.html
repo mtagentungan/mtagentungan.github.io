@@ -1,79 +1,125 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Kesanggupan</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <h2>Dashboard Admin</h2>
+  
+  <!-- List Kesanggupan selalu muncul -->
   <div id="listKesanggupan"></div>
 
   <div class="card">
     <h3>TAMBAH KESANGGUPAN</h3>
     <label>ID KESANGGUPAN:</label>
-    <input type="text" id="id_ksg" placeholder="KSG003">
+    <input type="text" id="id_ksg" placeholder="KSG003" autocomplete="off">
     <label>NAMA KESANGGUPAN:</label>
-    <input type="text" id="nama_ksg">
+    <input type="text" id="nama_ksg" placeholder="Renovasi Masjid" autocomplete="off">
     <label>TOTAL KESANGGUPAN:</label>
-    <input type="number" id="target_ksg">
+    <input type="number" id="target_ksg" placeholder="20000000" autocomplete="off">
     <button onclick="tambahKsg()">TAMBAH KESANGGUPAN</button>
   </div>
 
   <button class="btn-secondary" onclick="logout()">LOGOUT</button>
 
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzpjOzg0OLdGBNVf5SYm3iuDJyaE035NLv_XgoM5XZ90dvOhbt6RPZzPAa8324sNQCx/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbz9qxsXcG6l_H10knBDfDsen-wSpfP3z-Cr5uMBJnKlaG_1J441xRutpiBK4iZkwe76/exec'; // GANTI INI
 const user = JSON.parse(localStorage.getItem('user'));
-if(!user || user.role!= 'admin') location.href = 'index.html';
+if(!user || user.role != 'admin') location.href = 'index.html';
 
 window.onload = loadKesanggupan;
 
 function loadKesanggupan() {
-  fetch(GAS_URL + '?action=getAllKesanggupan', {method: 'POST'})
- .then(r => r.json()).then(data => {
+  document.getElementById('listKesanggupan').innerHTML = '<div class="card">Loading...</div>';
+  
+  fetch(GAS_URL + '?action=getAllKesanggupan', {
+    method: 'POST',
+    body: JSON.stringify({})
+  })
+  .then(r => r.json())
+  .then(data => {
     let html = '';
-    data.forEach(k => {
-      html += `
-      <div class="card" onclick="pilihKsg('${k.id_ksg}', '${k.status}')">
-        <h3>${k.nama}</h3>
-        <p style="text-align:center">
-          Terkumpul: <b>Rp ${k.terkumpul.toLocaleString('id')}</b><br>
-          Sisa: <b>Rp ${k.sisa.toLocaleString('id')}</b><br>
-          Status: <b style="color:${k.status=='Aktif'?'var(--accent-cyan)':'#f87171'}">${k.status}</b>
-        </p>
-        <button class="btn-secondary" onclick="event.stopPropagation(); hapusKsg('${k.id_ksg}')">HAPUS</button>
-      </div>`;
-    });
+    if(data.length == 0) {
+      html = '<div class="card"><p style="text-align:center">Belum ada data kesanggupan</p></div>';
+    } else {
+      data.forEach(k => {
+        const warnaStatus = k.status == 'Aktif' ? 'var(--accent-cyan)' : '#f87171';
+        html += `
+        <div class="card" onclick="pilihKsg('${k.id_ksg}', '${k.status}', '${k.nama}')">
+          <h3 style="text-align:center">${k.nama}</h3>
+          <p style="text-align:center; line-height: 1.8;">
+            Total Terkumpul: <b>Rp ${k.terkumpul.toLocaleString('id')}</b><br>
+            Sisa Kekurangan: <b>Rp ${k.sisa.toLocaleString('id')}</b><br>
+            Status: <b style="color:${warnaStatus}">${k.status.toUpperCase()}</b>
+          </p>
+          <button class="btn-secondary" onclick="event.stopPropagation(); hapusKsg('${k.id_ksg}', '${k.nama}')">HAPUS KESANGGUPAN</button>
+        </div>`;
+      });
+    }
     document.getElementById('listKesanggupan').innerHTML = html;
+  })
+  .catch(err => {
+    document.getElementById('listKesanggupan').innerHTML = '<div class="card">Gagal load data</div>';
   });
 }
 
-function pilihKsg(id, status) {
-  if(status == 'Selesai') return alert('Kesanggupan sudah selesai');
-  localStorage.setItem('id_ksg', id);
+function pilihKsg(id, status, nama) {
+  if(status == 'Selesai') {
+    alert(`Notifier: Kesanggupan "${nama}" sudah selesai`);
+    return;
+  }
+  localStorage.setItem('id_ksg_aktif', id);
   location.href = 'admin-detail.html';
 }
 
 function tambahKsg() {
-  const data = {
-    id: id_ksg.value, nama: nama_ksg.value, target: target_ksg.value
-  };
-  postData('tambahKesanggupan', data, () => location.reload());
+  const id = document.getElementById('id_ksg').value.trim();
+  const nama = document.getElementById('nama_ksg').value.trim();
+  const target = document.getElementById('target_ksg').value.trim();
+  
+  if(!id ||!nama ||!target) return alert('Semua field wajib diisi');
+  
+  const data = {id: id, nama: nama, target: Number(target)};
+  
+  fetch(GAS_URL + '?action=tambahKesanggupan', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  })
+  .then(r => r.json())
+  .then(res => {
+    if(res.status == 'ok') {
+      alert('Kesanggupan berhasil ditambah');
+      location.reload();
+    } else {
+      alert('Gagal tambah data');
+    }
+  });
 }
 
-function hapusKsg(id) {
-  if(confirm('Hapus kesanggupan ini? Semua data anggota & cicilan ikut hilang!')) {
-    postData('hapusKesanggupan', {id_ksg: id}, () => location.reload());
+function hapusKsg(id, nama) {
+  if(confirm(`Hapus kesanggupan "${nama}"?\nSemua data anggota & cicilan akan ikut terhapus!`)) {
+    fetch(GAS_URL + '?action=hapusKesanggupan', {
+      method: 'POST',
+      body: JSON.stringify({id_ksg: id})
+    })
+    .then(r => r.json())
+    .then(res => {
+      if(res.status == 'ok') {
+        alert('Kesanggupan berhasil dihapus');
+        location.reload();
+      }
+    });
   }
 }
 
-function postData(action, data, cb) {
-  fetch(GAS_URL + '?action=' + action, {method: 'POST', body: JSON.stringify(data)})
- .then(r => r.json()).then(cb);
+function logout() { 
+  localStorage.clear(); 
+  location.href = 'index.html'; 
 }
-
-function logout() { localStorage.clear(); location.href = 'index.html'; }
 </script>
+
 </body>
 </html>
