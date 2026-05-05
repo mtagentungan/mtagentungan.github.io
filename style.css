@@ -1,140 +1,44 @@
-/* style.css */
-
 :root {
-  /* Tema Warna: Midnight Slate & Cyber Blue */
-  --bg-color: #0b0e14;
-  --card-bg: rgba(255, 255, 255, 0.05);
-  --accent-color: #00d2ff; /* Warna Sci-fi Blue */
-  --text-primary: #e0e0e0;
-  --text-secondary: #94a3b8;
-  --border-color: rgba(0, 210, 255, 0.2);
-  --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
-}
-
-* {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
+  --bg: #0b0e14;
+  --card: rgba(255, 255, 255, 0.05);
+  --accent: #00d2ff;
+  --text: #e0e0e0;
+  --border: rgba(0, 210, 255, 0.2);
 }
 
 body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-primary);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
+  margin: 0; font-family: sans-serif; background: var(--bg); color: var(--text);
+  display: flex; justify-content: center; min-height: 100vh;
 }
 
-/* Container utama ala layar HP */
-.app-container {
-  width: 100%;
-  max-width: 480px; /* Lebar maksimal seperti smartphone */
-  padding: 20px;
-  min-height: 100vh;
-}
+.app-container { width: 100%; max-width: 450px; padding: 20px; }
 
-/* Header ala Android */
-header {
-  width: 100%;
-  padding: 16px 0;
-  text-align: center;
-  border-bottom: 1px solid var(--border-color);
-  margin-bottom: 24px;
-}
+header { text-align: center; border-bottom: 1px solid var(--border); margin-bottom: 20px; padding-bottom: 10px; }
+header h1 { color: var(--accent); text-transform: uppercase; letter-spacing: 2px; font-size: 1.4rem; }
 
-header h1 {
-  font-size: 1.5rem;
-  letter-spacing: 2px;
-  color: var(--accent-color);
-  text-transform: uppercase;
-  text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
-}
-
-/* Card View */
 .card {
-  background: var(--card-bg);
-  backdrop-filter: blur(10px); /* Efek kaca */
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow);
-  transition: transform 0.2s ease;
+  background: var(--card); backdrop-filter: blur(10px); border: 1px solid var(--border);
+  border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 }
 
-.card:active {
-  transform: scale(0.98); /* Feedback sentuhan ala Android */
+label { display: block; font-size: 0.8rem; color: var(--accent); margin-bottom: 5px; }
+
+input, select {
+  width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+  border-radius: 10px; color: white; margin-bottom: 15px; box-sizing: border-box;
 }
 
-/* Label & Typography */
-label {
-  display: block;
-  font-size: 0.85rem;
-  color: var(--accent-color);
-  margin-bottom: 8px;
-  font-weight: 600;
-  letter-spacing: 1px;
-}
+input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 8px var(--accent); }
 
-/* Textbox / Input */
-input[type="text"], input[type="number"], input[type="password"], select {
-  width: 100%;
-  padding: 12px 16px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  color: white;
-  font-size: 1rem;
-  margin-bottom: 16px;
-  transition: all 0.3s ease;
-}
-
-/* Tambahkan ini juga agar saat diklik ada efek glow sci-fi */
-input[type="text"]:focus, 
-input[type="password"]:focus, 
-input[type="number"]:focus {
-  outline: none;
-  border-color: var(--accent-color);
-  box-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
-  background: rgba(0, 210, 255, 0.05);
-}
-
-/* Button Futuristik */
 .btn {
-  width: 100%;
-  padding: 14px;
-  background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
-  border: none;
-  border-radius: 12px;
-  color: white;
-  font-weight: bold;
-  font-size: 1rem;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
-  transition: all 0.3s ease;
+  width: 100%; padding: 12px; border: none; border-radius: 10px; font-weight: bold;
+  cursor: pointer; text-transform: uppercase; transition: 0.3s;
+  background: linear-gradient(135deg, #00d2ff, #3a7bd5); color: white;
 }
 
-.btn:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 5px rgba(0, 210, 255, 0.2);
-}
+.btn-secondary { background: transparent; border: 1px solid var(--accent); color: var(--accent); margin-top: 10px; }
 
-.btn-secondary {
-  background: transparent;
-  border: 1px solid var(--accent-color);
-  color: var(--accent-color);
-}
-
-/* Status Text */
-.status {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  text-align: center;
-  margin-top: 10px;
+.modal {
+  display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 90%; max-width: 400px; z-index: 1000;
 }
