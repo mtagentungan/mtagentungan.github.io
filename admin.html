@@ -1,18 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Dzikra System</title>
     <link rel="stylesheet" href="style.css">
-    <title>Admin Panel - Dzikra</title>
+    <style>
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; color: var(--text); }
+        th { border-bottom: 2px solid var(--accent); padding: 10px; text-align: left; font-size: 0.7rem; color: var(--accent); }
+        td { border-bottom: 1px solid var(--border); padding: 10px; font-size: 0.8rem; vertical-align: middle; }
+        .btn-mini { background: var(--accent); border: none; border-radius: 5px; padding: 5px 10px; color: #000; font-weight: bold; cursor: pointer; }
+    </style>
 </head>
 <body>
+
 <div id="loader">
     <div class="spinner"></div>
-    <div style="color:var(--accent);margin-top:15px;letter-spacing:2px;font-size:10px">SYNCING SYSTEM...</div>
+    <div style="color:var(--accent);margin-top:15px;letter-spacing:2px;font-size:10px">MENGHUBUNGKAN...</div>
 </div>
 
 <div class="app-container">
-    <header><h1 id="adm-name">ADMIN PANEL</h1></header>
+    <header>
+        <h1>ADMIN PANEL</h1>
+        <p id="adm-info" style="font-size: 0.7rem; color: var(--accent);"></p>
+    </header>
     
     <div style="display:flex; gap:10px; margin-bottom:15px">
         <button class="btn" style="font-size:0.7rem; padding:10px" onclick="openM('modal-k')">+ KESANGGUPAN</button>
@@ -21,13 +32,13 @@
 
     <div id="dash">Memuat data dashboard...</div>
     
-    <button class="btn btn-secondary" onclick="logout()" style="margin-top:20px">LOGOUT</button>
+    <button class="btn btn-secondary" onclick="logout()" style="margin-top:20px">LOGOUT SYSTEM</button>
 </div>
 
 <div id="modal-k" class="card modal" style="display:none; position:fixed; top:15%; left:5%; width:90%; z-index:100; background:#161b22; border:1px solid var(--accent)">
     <label>NAMA KESANGGUPAN</label>
-    <input type="text" id="nk" placeholder="Contoh: TPP 2026">
-    <label>TARGET KELOMPOK (Rp)</label>
+    <input type="text" id="nk" placeholder="Contoh: Tanah Ponpes">
+    <label>TARGET TOTAL KELOMPOK (Rp)</label>
     <input type="number" id="tk" placeholder="0">
     <button class="btn" onclick="addK()">SIMPAN PROGRAM</button>
     <button class="btn btn-secondary" onclick="closeM('modal-k')">BATAL</button>
@@ -36,53 +47,58 @@
 <div id="modal-a" class="card modal" style="display:none; position:fixed; top:5%; left:5%; width:90%; z-index:100; background:#161b22; border:1px solid var(--accent)">
     <label>DATA ANGGOTA BARU</label>
     <input type="text" id="an" placeholder="Nama Lengkap">
-    <input type="text" id="au" placeholder="Username Login">
-    <input type="password" id="ap" placeholder="PIN Login">
+    <input type="text" id="au" placeholder="Username">
+    <input type="password" id="ap" placeholder="PIN (Angka)">
     <input type="number" id="aw" placeholder="628xxx (WA)">
-    <label>PILIH PROGRAM</label>
+    <label>PILIH KESANGGUPAN</label>
     <select id="sel-k"></select>
     <input type="number" id="at" placeholder="Target Pribadi (Rp)">
     <button class="btn" onclick="addA()">DAFTARKAN</button>
     <button class="btn btn-secondary" onclick="closeM('modal-a')">BATAL</button>
 </div>
 
+<div id="modal-list-anggota" class="card modal" style="display:none; position:fixed; top:5%; left:2%; width:96%; height:90%; z-index:1000; background:#0b0e14; border:1px solid var(--accent); overflow-y: auto;">
+    <h3 id="judul-program" style="text-align:center; color:var(--accent); margin-top:10px">Daftar Anggota</h3>
+    <div style="overflow-x: auto; padding: 5px;">
+        <table>
+            <thead>
+                <tr>
+                    <th>NAMA</th>
+                    <th style="text-align: right;">SISA</th>
+                    <th style="text-align: center;">OPSI</th>
+                </tr>
+            </thead>
+            <tbody id="tabel-body-anggota"></tbody>
+        </table>
+    </div>
+    <button class="btn btn-secondary" onclick="closeM('modal-list-anggota')" style="margin-top:20px">TUTUP</button>
+</div>
+
 <div id="modal-aksi" class="card modal" style="display:none; position:fixed; top:15%; left:5%; width:90%; z-index:1001; background:#161b22; border:2px solid var(--accent)">
     <h3 id="target-nama" style="text-align:center; color:var(--accent); margin-bottom:5px">Nama Anggota</h3>
     <p id="target-info" style="text-align:center; font-size:0.8rem; margin-bottom:15px"></p>
     
-    <label>INPUT CICILAN (Rp)</label>
+    <label>NOMINAL NYICIL (Rp)</label>
     <input type="number" id="nom-admin" placeholder="0">
-    <button class="btn" onclick="prosesBayarAdmin()">SIMPAN CICILAN</button>
+    <button class="btn" onclick="prosesBayarAdmin()">SIMPAN PEMBAYARAN</button>
     
-    <button class="btn btn-secondary" onclick="kirimWAAdmin()" style="margin-top:10px">KIRIM WA RINCIAN</button>
+    <button class="btn btn-secondary" onclick="kirimWAAdmin()" style="margin-top:10px">KIRIM RINCIAN WA</button>
     <button class="btn btn-secondary" onclick="closeM('modal-aksi')" style="border-color:#ff4b2b; color:#ff4b2b">BATAL</button>
 </div>
 
 <script>
     const url = localStorage.getItem("SCRIPT_URL");
     const user = JSON.parse(sessionStorage.getItem("user"));
-    
-    // Proteksi Admin
-    if(!user || user.role !== 'admin') {
-        window.location.href="index.html";
-    }
+    let selectedUser = {}; 
 
-    let selectedUser = {}; // Simpan data user yang dipilih
+    if(!user || user.role !== 'admin') window.location.href="index.html";
+    document.getElementById("adm-info").innerText = "Admin: " + user.nama;
 
-    function setLoading(s) { 
-        document.getElementById("loader").style.display = s ? "flex" : "none"; 
-    }
+    function setLoading(s) { document.getElementById("loader").style.display = s ? "flex" : "none"; }
+    function openM(id) { document.getElementById(id).style.display='block'; if(id=='modal-a') loadPrograms(); }
+    function closeM(id) { document.getElementById(id).style.display='none'; }
 
-    function openM(id) { 
-        document.getElementById(id).style.display='block'; 
-        if(id=='modal-a') loadPrograms(); 
-    }
-
-    function closeM(id) { 
-        document.getElementById(id).style.display='none'; 
-    }
-
-    // Load Kartu Dashboard
+    // Dashboard utama (Kartu Program)
     function loadDash() {
         setLoading(true);
         fetch(url + "?action=getDashboardAdmin")
@@ -92,81 +108,80 @@
             let h = "";
             data.forEach(i => {
                 h += `
-                <div class="card" style="text-align:center">
+                <div class="card" style="text-align:center" onclick="bukaProgram('${i.nama}')">
                     <h3 style="color:var(--accent);margin:0">${i.nama}</h3>
                     <p style="font-size:0.8rem; margin:10px 0">
-                        Terkumpul: <b>Rp ${i.total.toLocaleString()}</b><br>
-                        Sisa: <b style="color:#ff4b2b">Rp ${i.sisa.toLocaleString()}</b>
+                        Total Masuk: <b>Rp ${i.total.toLocaleString()}</b><br>
+                        Status: <b style="color:var(--accent)">${i.status.toUpperCase()}</b>
                     </p>
-                    <button class="btn btn-secondary" style="font-size:0.7rem; padding:8px" onclick="pilihAnggota('${i.nama}')">INPUT CICILAN / WA</button>
+                    <small style="color:var(--accent)">Klik untuk detail anggota</small>
                 </div>`;
             });
-            document.getElementById("dash").innerHTML = h || "<p style='text-align:center'>Belum ada program.</p>";
-        })
-        .catch(err => {
-            setLoading(false);
-            console.error(err);
-            document.getElementById("dash").innerHTML = "Gagal memuat data.";
-        });
+            document.getElementById("dash").innerHTML = h || "<p>Belum ada program.</p>";
+        }).catch(() => setLoading(false));
     }
 
-    function pilihAnggota(namaProg) {
-        let userTgt = prompt("Masukkan USERNAME Anggota untuk program " + namaProg + ":");
-        if(!userTgt) return;
-        
+    // Tabel Anggota per Program
+    function bukaProgram(namaProg) {
         setLoading(true);
-        fetch(`${url}?action=getDataAnggota&username=${userTgt}`)
+        fetch(`${url}?action=getListAnggotaPerProgram&program=${namaProg}`)
         .then(r => r.json())
         .then(res => {
             setLoading(false);
-            if(res.error) return alert("Username tidak ditemukan di database!");
-            
-            selectedUser = { 
-                username: userTgt, 
-                program: namaProg, 
-                wa: res.wa_anggota || "", // Pastikan WA terambil dari backend
-                nama: userTgt,
-                res: res 
-            };
-            
-            document.getElementById("target-nama").innerText = userTgt.toUpperCase();
-            document.getElementById("target-info").innerText = `Program: ${namaProg} | Sisa: Rp ${(res.target - res.terbayar).toLocaleString()}`;
+            document.getElementById("judul-program").innerText = namaProg;
+            let html = "";
+            res.forEach(a => {
+                let sisa = a.target - a.terbayar;
+                let sisaWarna = sisa <= 0 ? "#00ff88" : "#ff4b2b";
+                let sisaText = sisa <= 0 ? "LUNAS" : sisa.toLocaleString();
+
+                html += `
+                <tr>
+                    <td>${a.namaAsli}<br><small style="color:var(--accent)">@${a.username}</small></td>
+                    <td style="text-align: right; color:${sisaWarna}; font-weight:bold;">${sisaText}</td>
+                    <td style="text-align: center;">
+                        <button class="btn-mini" onclick="bukaAksi('${a.username}', '${namaProg}')">⚙️</button>
+                    </td>
+                </tr>`;
+            });
+            document.getElementById("tabel-body-anggota").innerHTML = html || "<tr><td colspan='3' style='text-align:center'>Kosong</td></tr>";
+            openM('modal-list-anggota');
+        }).catch(() => setLoading(false));
+    }
+
+    // Modal Aksi (Nyicil/WA)
+    function bukaAksi(username, namaProg) {
+        closeM('modal-list-anggota');
+        setLoading(true);
+        fetch(`${url}?action=getDetailAnggotaAdmin&username=${username}&program=${namaProg}`)
+        .then(r => r.json())
+        .then(res => {
+            setLoading(false);
+            selectedUser = { username: username, program: namaProg, namaAsli: res.namaAsli, wa: res.wa, target: res.target, terbayar: res.terbayar, riwayat: res.riwayat };
+            document.getElementById("target-nama").innerText = res.namaAsli.toUpperCase();
+            document.getElementById("target-info").innerText = `Sisa: Rp ${(res.target - res.terbayar).toLocaleString()}`;
             document.getElementById("modal-aksi").style.display = 'block';
-        })
-        .catch(() => { setLoading(false); alert("Error mengambil data anggota."); });
+        }).catch(() => setLoading(false));
     }
 
     function prosesBayarAdmin() {
         let n = document.getElementById("nom-admin").value;
-        if(!n || n <= 0) return alert("Masukkan nominal cicilan!");
-        
+        if(!n || n <= 0) return;
         setLoading(true);
-        fetch(url, { 
-            method:"POST", 
-            body: JSON.stringify({ 
-                action:"addBayar", 
-                username: selectedUser.username, 
-                program: selectedUser.program, 
-                nominal: n 
-            }) 
-        }).then(() => location.reload());
+        fetch(url, { method:"POST", body: JSON.stringify({ action:"addBayar", username:selectedUser.username, program:selectedUser.program, nominal:n }) })
+        .then(() => location.reload());
     }
 
     function kirimWAAdmin() {
-        let res = selectedUser.res;
-        let sisa = (res.target - res.terbayar) <= 0 ? "*SELESAI*" : `Rp. ${(res.target - res.terbayar).toLocaleString()}`;
-        let rText = ""; 
-        res.riwayat.forEach(r => rText += `${r.tanggal} - Rp. ${r.nominal.toLocaleString()}\n`);
-        
-        let pesan = `Assalaamu'alaikum,\nBerikut rincian titipan *${selectedUser.program}* atas nama *${selectedUser.username.toUpperCase()}*:\n\nTarget: Rp. ${res.target.toLocaleString()}\nTotal Masuk: Rp. ${res.terbayar.toLocaleString()}\nSisa: ${sisa}\n\nRiwayat:\n${rText}\n> _Admin Dzikra System_`;
-        
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`, "_blank");
+        let sisa = (selectedUser.target - selectedUser.terbayar) <= 0 ? "*SELESAI*" : `Rp. ${(selectedUser.target - selectedUser.terbayar).toLocaleString()}`;
+        let rText = ""; selectedUser.riwayat.forEach(r => rText += `${r.tanggal} - Rp. ${r.nominal.toLocaleString()}\n`);
+        let pesan = `Assalaamu'alaikum,\nMas ${selectedUser.namaAsli.toUpperCase()}, rincian *${selectedUser.program}*:\n\nTarget: Rp. ${selectedUser.target.toLocaleString()}\nTitip: Rp. ${selectedUser.terbayar.toLocaleString()}\nKekurangan: ${sisa}\n\nRiwayat:\n${rText}\n> _Bendahara II Kelompok Bancak_`;
+        window.open(`https://api.whatsapp.com/send?phone=${selectedUser.wa}&text=${encodeURIComponent(pesan)}`, "_blank");
     }
 
+    // Fungsi Tambahan
     function loadPrograms() {
-        fetch(url + "?action=getProgramList")
-        .then(r => r.json())
-        .then(d => {
+        fetch(url + "?action=getProgramList").then(r=>r.json()).then(d=>{
             let o = ""; d.forEach(p => o += `<option value="${p}">${p}</option>`);
             document.getElementById("sel-k").innerHTML = o;
         });
@@ -175,29 +190,19 @@
     function addK() {
         let n = document.getElementById("nk").value;
         let t = document.getElementById("tk").value;
-        if(!n || !t) return alert("Lengkapi data!");
+        if(!n || !t) return;
         setLoading(true);
         fetch(url, { method:"POST", body: JSON.stringify({ action: "addKesanggupan", id: Date.now(), nama: n, target: t }) }).then(()=>location.reload());
     }
 
     function addA() {
-        const body = { 
-            action: "addAnggota", 
-            nama: document.getElementById("an").value, 
-            user: document.getElementById("au").value, 
-            pin: document.getElementById("ap").value, 
-            wa: document.getElementById("aw").value, 
-            program: document.getElementById("sel-k").value, 
-            target: document.getElementById("at").value 
-        };
-        if(!body.user || !body.pin) return alert("Lengkapi data!");
+        const body = { action: "addAnggota", nama: document.getElementById("an").value, user: document.getElementById("au").value, pin: document.getElementById("ap").value, wa: document.getElementById("aw").value, program: document.getElementById("sel-k").value, target: document.getElementById("at").value };
+        if(!body.user || !body.pin) return;
         setLoading(true);
         fetch(url, { method:"POST", body: JSON.stringify(body) }).then(()=>location.reload());
     }
 
     function logout() { sessionStorage.clear(); window.location.href="index.html"; }
-
-    // Start
     loadDash();
 </script>
 </body>
