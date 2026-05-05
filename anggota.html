@@ -23,7 +23,12 @@
     <div id="riwayat"></div>
     <button class="btn btn-secondary" onclick="logout()" style="margin-top:20px">LOGOUT</button>
 </div>
-
+<div class="card">
+    <label>PENGATURAN AKUN</label>
+    <input type="text" id="new-user" placeholder="Username Baru">
+    <input type="password" id="new-pin" placeholder="PIN Baru" inputmode="numeric">
+    <button class="btn btn-secondary" onclick="updateAkun()" style="font-size:0.8rem">UPDATE USERNAME & PIN</button>
+</div>
 <script>
     const url = localStorage.getItem("SCRIPT_URL");
     const user = JSON.parse(sessionStorage.getItem("user"));
@@ -63,6 +68,30 @@
 
     function logout() { sessionStorage.clear(); window.location.href="index.html"; }
     loadData();
+    
+function updateAkun() {
+    const nU = document.getElementById("new-user").value;
+    const nP = document.getElementById("new-pin").value;
+    if(!nU || !nP) return alert("Isi username dan PIN baru!");
+
+    setLoading(true);
+    fetch(url, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "updateProfile",
+            oldUser: user.username,
+            newUser: nU,
+            newPin: nP
+        })
+    })
+    .then(r => r.json()).then(res => {
+        setLoading(false);
+        if(res.status == "success") {
+            alert("Akun berhasil diupdate! Silakan login ulang.");
+            logout();
+        }
+    });
+}
 </script>
 </body>
 </html>
