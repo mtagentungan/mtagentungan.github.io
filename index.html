@@ -1,83 +1,38 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - System</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <div class="app-container">
-    <header>
-        <h1>Dzikra System</h1>
-    </header>
-
-    <div class="card" id="login-box">
+    <header><h1>DZIKRA LOGIN</h1></header>
+    <div class="card">
         <label>Silakan masukan username dan PIN anda</label>
-        
-        <input type="text" id="username" placeholder="Username" autocomplete="off">
-        <input type="password" id="pin" placeholder="PIN (Angka)" inputmode="numeric">
-        
-        <button class="btn" onclick="prosesLogin()" id="btn-login">LOGIN SYSTEM</button>
-        <p class="status" id="msg"></p>
+        <input type="text" id="user" placeholder="Username">
+        <input type="password" id="pin" placeholder="PIN" inputmode="numeric">
+        <button class="btn" onclick="login()">LOGIN SYSTEM</button>
+        <p id="msg" style="text-align:center; font-size:0.8rem; margin-top:10px"></p>
     </div>
 </div>
-
 <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz0fURtH8iIC2DiaxwBB9mfouo0V_EXs17kbg26AMzSzJFnvVk_dJ37tu2L73WS7gd9/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhIvXCXJ4i4eNVNWLnuKteWFV4MwUqvmP7UNC-oqT6aglEs6JEYcUmWkZQ2lWb9juX/exec"; // Ganti ini sekali saja
+    localStorage.setItem("SCRIPT_URL", SCRIPT_URL);
 
-    function prosesLogin() {
-        const user = document.getElementById("username").value;
-        const pin = document.getElementById("pin").value;
-        const msg = document.getElementById("msg");
-        const btn = document.getElementById("btn-login");
-
-        if(!user || !pin) {
-            msg.innerText = "Isi semua field!";
-            return;
-        }
-
-        btn.disabled = true;
-        btn.innerText = "AUTHENTICATING...";
-        msg.innerText = "Menghubungkan ke server...";
-
-        fetch(WEB_APP_URL, {
+    function login() {
+        const u = document.getElementById("user").value;
+        const p = document.getElementById("pin").value;
+        fetch(SCRIPT_URL, {
             method: "POST",
-            body: JSON.stringify({ username: user, pin: pin })
+            body: JSON.stringify({ action: "login", username: u, pin: p })
         })
-        .then(res => res.json())
-        .then(res => {
-            if(res.status === "success") {
-                // Simpan data login di session browser
-                sessionStorage.setItem("isLoggedIn", "true");
-                sessionStorage.setItem("userData", JSON.stringify(res));
-
-                msg.style.color = "#00d2ff";
-                msg.innerText = "Login Berhasil! Mengalihkan...";
-
-                // Arahkan berdasarkan role
-                setTimeout(() => {
-                    if(res.role === "admin") {
-                        window.location.href = "admin.html";
-                    } else {
-                        window.location.href = "anggota.html";
-                    }
-                }, 1000);
-            } else {
-                msg.style.color = "#ff4b2b";
-                msg.innerText = res.message;
-                btn.disabled = false;
-                btn.innerText = "LOGIN SYSTEM";
-            }
-        })
-        .catch(err => {
-            msg.innerText = "Error koneksi!";
-            btn.disabled = false;
-            console.error(err);
+        .then(r => r.json()).then(res => {
+            if(res.status == "success") {
+                sessionStorage.setItem("user", JSON.stringify(res));
+                window.location.href = res.role == "admin" ? "admin.html" : "anggota.html";
+            } else { document.getElementById("msg").innerText = res.message; }
         });
     }
 </script>
-
 </body>
 </html>
