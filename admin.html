@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Kesanggupan</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h2>Dashboard Admin</h2>
+  <div id="listKesanggupan"></div>
+
+  <div class="card">
+    <h3>TAMBAH KESANGGUPAN</h3>
+    <label>ID KESANGGUPAN:</label>
+    <input type="text" id="id_ksg" placeholder="KSG003">
+    <label>NAMA KESANGGUPAN:</label>
+    <input type="text" id="nama_ksg">
+    <label>TOTAL KESANGGUPAN:</label>
+    <input type="number" id="target_ksg">
+    <button onclick="tambahKsg()">TAMBAH KESANGGUPAN</button>
+  </div>
+
+  <button class="btn-secondary" onclick="logout()">LOGOUT</button>
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbz9qxsXcG6l_H10knBDfDsen-wSpfP3z-Cr5uMBJnKlaG_1J441xRutpiBK4iZkwe76/exec';
+const user = JSON.parse(localStorage.getItem('user'));
+if(!user || user.role!= 'admin') location.href = 'index.html';
+
+window.onload = loadKesanggupan;
+
+function loadKesanggupan() {
+  fetch(GAS_URL + '?action=getAllKesanggupan', {method: 'POST'})
+ .then(r => r.json()).then(data => {
+    let html = '';
+    data.forEach(k => {
+      html += `
+      <div class="card" onclick="pilihKsg('${k.id_ksg}', '${k.status}')">
+        <h3>${k.nama}</h3>
+        <p style="text-align:center">
+          Terkumpul: <b>Rp ${k.terkumpul.toLocaleString('id')}</b><br>
+          Sisa: <b>Rp ${k.sisa.toLocaleString('id')}</b><br>
+          Status: <b style="color:${k.status=='Aktif'?'var(--accent-cyan)':'#f87171'}">${k.status}</b>
+        </p>
+        <button class="btn-secondary" onclick="event.stopPropagation(); hapusKsg('${k.id_ksg}')">HAPUS</button>
+      </div>`;
+    });
+    document.getElementById('listKesanggupan').innerHTML = html;
+  });
+}
+
+function pilihKsg(id, status) {
+  if(status == 'Selesai') return alert('Kesanggupan sudah selesai');
+  localStorage.setItem('id_ksg', id);
+  location.href = 'admin-detail.html';
+}
+
+function tambahKsg() {
+  const data = {
+    id: id_ksg.value, nama: nama_ksg.value, target: target_ksg.value
+  };
+  postData('tambahKesanggupan', data, () => location.reload());
+}
+
+function hapusKsg(id) {
+  if(confirm('Hapus kesanggupan ini? Semua data anggota & cicilan ikut hilang!')) {
+    postData('hapusKesanggupan', {id_ksg: id}, () => location.reload());
+  }
+}
+
+function postData(action, data, cb) {
+  fetch(GAS_URL + '?action=' + action, {method: 'POST', body: JSON.stringify(data)})
+ .then(r => r.json()).then(cb);
+}
+
+function logout() { localStorage.clear(); location.href = 'index.html'; }
+</script>
+</body>
+</html>
