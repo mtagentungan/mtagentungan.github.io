@@ -5,6 +5,23 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div style="margin-top: 20px;">
+    <button class="btn btn-secondary" id="btn-toggle-akun" onclick="togglePengaturan()" style="font-size: 0.8rem; border-style: dashed;">
+        ⚙️ PENGATURAN AKUN
+    </button>
+
+    <div id="area-pengaturan" class="card" style="display: none; margin-top: 15px; border: 1px dashed var(--accent);">
+        <label>USERNAME BARU</label>
+        <input type="text" id="new-user" placeholder="Ketik username...">
+        
+        <label>PIN BARU</label>
+        <input type="password" id="new-pin" placeholder="Ketik PIN baru..." inputmode="numeric">
+        
+        <button class="btn" onclick="updateAkun()" style="margin-top: 10px;">SIMPAN PERUBAHAN</button>
+        <button class="btn btn-secondary" onclick="togglePengaturan()" style="border:none; color: #ff4b2b;">BATAL</button>
+    </div>
+    </div>
+    
 <div id="loader"><div class="spinner"></div><div style="color:var(--accent);margin-top:15px;letter-spacing:2px;font-size:10px">UPDATING...</div></div>
 
 <div class="app-container">
@@ -66,6 +83,20 @@
             logout();
         });
     }
+
+    function togglePengaturan() {
+    const area = document.getElementById("area-pengaturan");
+    const btn = document.getElementById("btn-toggle-akun");
+    
+    if (area.style.display === "none") {
+        area.style.display = "block";
+        btn.style.display = "none"; // Sembunyikan tombol utama saat form buka
+    } else {
+        area.style.display = "none";
+        btn.style.display = "block";
+    }
+    }
+    
 
     function logout() { sessionStorage.clear(); window.location.href="index.html"; }
     loadData();
