@@ -1,118 +1,134 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Anggota</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anggota - Dzikra</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h2 id="salamUser">Assalamu'alaikum</h2>
-  
-  <!-- Card Kesanggupan Kelompok, selalu muncul -->
-  <div class="card" id="cardKelompok" style="text-align:center;"></div>
-  
-  <!-- Card Data Pribadi -->
-  <div class="card" id="cardPribadi"></div>
-  
-  <!-- Rincian Angsuran -->
-  <h3 style="text-align:center; color:var(--text-primary);">Rincian Angsuran</h3>
-  <div id="listAngsuran"></div>
 
-  <button onclick="kirimWA()">KIRIM WA</button>
-  <button class="btn-secondary" onclick="kembali()">GANTI KESANGGUPAN</button>
-  <button class="btn-secondary" onclick="logout()">LOGOUT</button>
+<div class="app-container">
+    <header>
+        <h1 id="sapaan">Assalamu'alaikum...</h1>
+    </header>
+
+    <div class="card" style="text-align: center;">
+        <label id="label-program">Program: -</label>
+        <p style="font-size: 0.9rem;">Kesanggupan total anda:<br>
+           <strong style="font-size: 1.2rem; color: var(--accent);">Rp <span id="total-target">0</span></strong>
+        </p>
+        <p style="font-size: 0.9rem;">Sudah membayar:<br>
+           <strong style="color: #00ff88;">Rp <span id="total-bayar">0</span></strong>
+        </p>
+        <p style="font-size: 0.9rem; border-top: 1px solid var(--border); padding-top: 10px;">Kekurangan:<br>
+           <strong style="color: #ff4b2b;">Rp <span id="sisa-bayar">0</span></strong>
+        </p>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button class="btn" onclick="toggleNyicil()">+ NYICIL</button>
+        <button class="btn btn-secondary" onclick="kirimWA()">KIRIM WA</button>
+    </div>
+
+    <div id="form-nyicil" class="card" style="display: none; border: 1px solid var(--accent);">
+        <label>Masukkan Nominal Nyicil</label>
+        <input type="number" id="input-nominal" placeholder="Contoh: 50000">
+        <button class="btn" onclick="prosesBayar()">KONFIRMASI BAYAR</button>
+    </div>
+
+    <label style="margin-left: 5px;">RIWAYAT ANGSURAN</label>
+    <div id="list-riwayat">
+        </div>
+
+    <button class="btn btn-secondary" onclick="logout()" style="margin-top: 20px;">LOGOUT</button>
+</div>
 
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbz9qxsXcG6l_H10knBDfDsen-wSpfP3z-Cr5uMBJnKlaG_1J441xRutpiBK4iZkwe76/exec'; // GANTI INI
-const user = JSON.parse(localStorage.getItem('user'));
-const idKsg = localStorage.getItem('id_ksg_user');
-if(!user ||!idKsg) location.href = 'index.html';
+    const url = localStorage.getItem("SCRIPT_URL");
+    const user = JSON.parse(sessionStorage.getItem("user"));
 
-let dataLengkap = {};
+    // Proteksi Halaman
+    if (!user || user.role !== 'user') window.location.href = "index.html";
 
-window.onload = loadDataAnggota;
+    document.getElementById("sapaan").innerText = `Assalamu'alaikum mas ${user.nama},`;
 
-function loadDataAnggota() {
-  fetch(GAS_URL + '?action=getAnggotaData', {
-    method: 'POST',
-    body: JSON.stringify({username: user.username, id_ksg: idKsg})
-  })
-  .then(r => r.json())
-  .then(d => {
-    dataLengkap = d;
-    
-    // 1. Salam
-    document.getElementById('salamUser').innerText = `Assalamu'alaikum mas ${d.nama}`;
-    
-    // 2. Card Kelompok
-    document.getElementById('cardKelompok').innerHTML = `
-      <h3>${d.namaKesanggupan}</h3>
-      <p style="line-height: 1.8;">
-        Total Terkumpul: <b>Rp ${d.totalTerkumpul.toLocaleString('id')}</b><br>
-        Sisa Kekurangan: <b>Rp ${d.sisaKelompok.toLocaleString('id')}</b>
-      </p>
-    `;
-    
-    // 3. Card Pribadi
-    const sisaText = d.sisa <= 0 ? '<b style="color:var(--accent-cyan)">SELESAI</b>' : `Rp ${d.sisa.toLocaleString('id')}`;
-    document.getElementById('cardPribadi').innerHTML = `
-      <p style="line-height: 2;">
-        Kesanggupan total anda <b>Rp ${d.kesanggupan.toLocaleString('id')}</b><br>
-        Sudah membayar <b>Rp ${d.totalBayar.toLocaleString('id')}</b><br>
-        Kekurangan ${sisaText}
-      </p>
-    `;
-    
-    // 4. List Angsuran
-    let listHtml = '';
-    if(d.rincian.length == 0) {
-      listHtml = '<div class="card"><p style="text-align:center">Belum ada angsuran</p></div>';
-    } else {
-      d.rincian.forEach(r => {
-        listHtml += `
-        <div class="card" style="padding: 15px;">
-          <p style="margin:0; display:flex; justify-content:space-between;">
-            <span>${r.tgl}</span>
-            <b>Rp ${Number(r.nominal).toLocaleString('id')}</b>
-          </p>
-        </div>`;
-      });
+    let globalData = {}; // Untuk menyimpan data yang akan dikirim via WA
+
+    function loadDataAnggota() {
+        fetch(`${url}?action=getDataAnggota&username=${user.username}`)
+        .then(r => r.json())
+        .then(res => {
+            globalData = res;
+            document.getElementById("label-program").innerText = "Program: " + res.program;
+            document.getElementById("total-target").innerText = res.target.toLocaleString();
+            document.getElementById("total-bayar").innerText = res.terbayar.toLocaleString();
+            
+            const sisa = res.target - res.terbayar;
+            document.getElementById("sisa-bayar").innerText = sisa <= 0 ? "SELESAI" : sisa.toLocaleString();
+
+            let h = "";
+            res.riwayat.forEach(r => {
+                h += `
+                <div class="card" style="margin-bottom: 8px; padding: 10px; font-size: 0.85rem;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>${r.tanggal}</span>
+                        <span style="color: var(--accent); font-weight: bold;">Rp ${r.nominal.toLocaleString()}</span>
+                    </div>
+                </div>`;
+            });
+            document.getElementById("list-riwayat").innerHTML = h || "<p class='status'>Belum ada pembayaran</p>";
+        });
     }
-    document.getElementById('listAngsuran').innerHTML = listHtml;
-  });
-}
 
-function kirimWA() {
-  const d = dataLengkap;
-  const sisaText = d.sisa <= 0 ? '*SELESAI*' : `Rp ${d.sisa.toLocaleString('id')}`;
-  
-  let rincianText = '';
-  d.rincian.slice().reverse().forEach(r => {
-    const tgl = new Date(r.tgl).toLocaleDateString('id-ID', {day:'2-digit', month:'2-digit', year:'2-digit'});
-    rincianText += `${tgl} - Rp ${Number(r.nominal).toLocaleString('id')}\n`;
-  });
-  
-  const pesan = `Assalaamu'alaikum,
-Mas ${d.nama}, berikut ini adalah rincian anda untuk kesanggupan *${d.namaKesanggupan}* :
+    function toggleNyicil() {
+        const f = document.getElementById("form-nyicil");
+        f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    }
 
-Kesanggupan: Rp.${Number(d.kesanggupan).toLocaleString('id')}
-Total titip: Rp.${d.totalBayar.toLocaleString('id')}
+    function prosesBayar() {
+        const nom = document.getElementById("input-nominal").value;
+        if (!nom || nom <= 0) return alert("Masukkan nominal!");
+
+        fetch(url, {
+            method: "POST",
+            body: JSON.stringify({
+                action: "addBayar",
+                username: user.username,
+                program: globalData.program,
+                nominal: nom
+            })
+        }).then(() => location.reload());
+    }
+
+    function kirimWA() {
+        const sisaText = (globalData.target - globalData.terbayar) <= 0 ? "*SELESAI*" : `Rp. ${globalData.target - globalData.terbayar}`;
+        
+        let riwayatText = "";
+        globalData.riwayat.forEach(r => {
+            riwayatText += `${r.tanggal} - Rp. ${r.nominal}\n`;
+        });
+
+        const pesan = `Assalaamu'alaikum,
+Mas ${user.nama.toUpperCase()}, berikut ini adalah rincian anda untuk kesanggupan *${globalData.program}* :
+
+Kesanggupan: Rp. ${globalData.target}
+Total titip: Rp. ${globalData.terbayar}
 Kekurangan: ${sisaText}
 
 Berikut rincian pembayaran:
-
-${rincianText}-----------------------------
+-----------------------------
+${riwayatText}-----------------------------
 
 > _Bendahara II Kelompok Bancak_`;
 
-  const urlWA = `https://wa.me/${d.no_wa}?text=${encodeURIComponent(pesan)}`;
-  window.open(urlWA, '_blank');
-}
+        const waUrl = `https://api.whatsapp.com/send?phone=${user.wa}&text=${encodeURIComponent(pesan)}`;
+        window.open(waUrl, "_blank");
+    }
 
-function kembali() { location.href = 'pilih-kesanggupan.html'; }
-function logout() { localStorage.clear(); location.href = 'index.html'; }
+    function logout() { sessionStorage.clear(); window.location.href = "index.html"; }
+
+    loadDataAnggota();
 </script>
-
 </body>
 </html>
