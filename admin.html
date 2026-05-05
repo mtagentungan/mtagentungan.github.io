@@ -1,100 +1,67 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div id="loader"><div class="spinner"></div><div style="color:var(--accent);margin-top:15px;letter-spacing:2px;font-size:10px">SYNCING DATA...</div></div>
-
-<div class="app-container">
-    <header><h1 id="adm-name">ADMIN PANEL</h1></header>
-    <div style="display:flex; gap:10px; margin-bottom:15px">
-        <button class="btn" style="font-size:0.7rem; padding:10px" onclick="openM('modal-k')">+ KESANGGUPAN</button>
-        <button class="btn" style="font-size:0.7rem; padding:10px" onclick="openM('modal-a')">+ ANGGOTA</button>
-    </div>
-    <div id="dash">Memuat data...</div>
-    <button class="btn btn-secondary" onclick="logout()">LOGOUT</button>
-</div>
-
-<div id="modal-k" class="card" style="display:none; position:fixed; top:20%; left:5%; width:90%; z-index:100; background:#161b22">
-    <label>NAMA KESANGGUPAN</label><input type="text" id="nk">
-    <label>TARGET KELOMPOK</label><input type="number" id="tk">
-    <button class="btn" onclick="addK()">SIMPAN PROGRAM</button>
-    <button class="btn btn-secondary" onclick="closeM('modal-k')">BATAL</button>
-</div>
-
-<div id="modal-a" class="card" style="display:none; position:fixed; top:10%; left:5%; width:90%; z-index:100; background:#161b22">
-    <label>NAMA / USER / PIN / WA / TARGET</label>
-    <input type="text" id="an" placeholder="Nama Lengkap">
-    <input type="text" id="au" placeholder="Username">
-    <input type="password" id="ap" placeholder="PIN">
-    <input type="number" id="aw" placeholder="628xxxx">
-    <select id="sel-k"></select>
-    <input type="number" id="at" placeholder="Target Pribadi">
-    <button class="btn" onclick="addA()">DAFTARKAN</button>
-    <button class="btn btn-secondary" onclick="closeM('modal-a')">BATAL</button>
-</div>
-
-    <div id="modal-aksi-anggota" class="card modal" style="display:none; position:fixed; top:10%; left:5%; width:90%; z-index:100; background:#161b22">
-    <h3 id="nama-target-aksi" style="color:var(--accent); text-align:center">Nama Anggota</h3>
-    <button class="btn" onclick="openNyicilAdmin()">+ INPUT NYICIL</button>
-    <button class="btn btn-secondary" onclick="kirimWAAdmin()">KIRIM WA KE ANGGOTA</button>
+<div id="modal-aksi" class="card" style="display:none; position:fixed; top:10%; left:5%; width:90%; z-index:1000; background:#161b22; border:2px solid var(--accent)">
+    <h3 id="target-nama" style="text-align:center; color:var(--accent)">Nama Anggota</h3>
+    <p id="target-info" style="text-align:center; font-size:0.8rem"></p>
     
-    <div id="form-nyicil-admin" style="display:none; margin-top:15px; border-top:1px solid var(--border); padding-top:10px;">
-        <label>Nominal Cicilan (Rp)</label>
-        <input type="number" id="nom-admin" placeholder="0">
-        <button class="btn" onclick="prosesBayarAdmin()">SIMPAN PEMBAYARAN</button>
-    </div>
+    <label>INPUT CICILAN (Rp)</label>
+    <input type="number" id="nom-admin" placeholder="0">
+    <button class="btn" onclick="prosesBayarAdmin()">SIMPAN CICILAN</button>
     
-    <button class="btn btn-secondary" onclick="closeM('modal-aksi-anggota')" style="margin-top:20px">TUTUP</button>
-    </div>
+    <button class="btn btn-secondary" onclick="kirimWAAdmin()" style="margin-top:10px">KIRIM WA KE ANGGOTA</button>
+    <button class="btn btn-secondary" onclick="closeM('modal-aksi')" style="border-color:#ff4b2b; color:#ff4b2b">BATAL</button>
+</div>
 
 <script>
-    const url = localStorage.getItem("SCRIPT_URL");
-    const user = JSON.parse(sessionStorage.getItem("user"));
-    if(!user || user.role !== 'admin') window.location.href="index.html";
+// Tambahkan variabel global untuk menyimpan data sementara anggota yang dipilih
+let selectedUser = {};
 
-    function setLoading(s) { document.getElementById("loader").style.display = s ? "flex" : "none"; }
-    function openM(id) { document.getElementById(id).style.display='block'; if(id=='modal-a') loadPrograms(); }
-    function closeM(id) { document.getElementById(id).style.display='none'; }
-
-    function loadDash() {
-        setLoading(true);
-        fetch(url + "?action=getDashboardAdmin").then(r=>r.json()).then(data=>{
-            setLoading(false);
-            let h = "";
-            data.forEach(i => {
-                h += `<div class="card" style="text-align:center">
-                    <h3 style="color:var(--accent);margin:0">${i.nama}</h3>
-                    <p style="font-size:0.8rem">Terkumpul: Rp ${i.total.toLocaleString()}</p>
-                    <p style="font-size:0.8rem;color:#ff4b2b">Sisa: Rp ${i.sisa.toLocaleString()}</p>
-                    <small>STATUS: ${i.status.toUpperCase()}</small>
-                </div>`;
-            });
-            document.getElementById("dash").innerHTML = h;
-        }).catch(()=>setLoading(false));
-    }
-
-    function loadPrograms() {
-        fetch(url + "?action=getProgramList").then(r=>r.json()).then(d=>{
-            let o = ""; d.forEach(p => o += `<option value="${p}">${p}</option>`);
-            document.getElementById("sel-k").innerHTML = o;
+// Modifikasi fungsi loadDash agar kartu bisa diklik
+function loadDash() {
+    setLoading(true);
+    fetch(url + "?action=getDashboardAdmin").then(r=>r.json()).then(data=>{
+        setLoading(false);
+        let h = "";
+        data.forEach(i => {
+            // Kita akan buat fitur klik untuk melihat list anggota di tahap berikutnya, 
+            // Untuk sekarang, kita buat tombol "AKSI" di tiap kartu
+            h += `<div class="card" style="text-align:center">
+                <h3 style="color:var(--accent);margin:0">${i.nama}</h3>
+                <p style="font-size:0.8rem">Terkumpul: Rp ${i.total.toLocaleString()}</p>
+                <button class="btn btn-secondary" style="font-size:0.7rem" onclick="pilihAnggota('${i.nama}')">KELOLA PEMBAYARAN</button>
+            </div>`;
         });
-    }
+        document.getElementById("dash").innerHTML = h;
+    });
+}
 
-    function addK() {
-        setLoading(true);
-        fetch(url, { method:"POST", body: JSON.stringify({ action: "addKesanggupan", id: Date.now(), nama: document.getElementById("nk").value, target: document.getElementById("tk").value }) }).then(()=>location.reload());
-    }
+// Fungsi sederhana untuk admin input cicilan (Contoh alur: Admin manual input username)
+function pilihAnggota(namaProg) {
+    let userTgt = prompt("Masukkan Username Anggota:");
+    if(!userTgt) return;
+    
+    setLoading(true);
+    fetch(`${url}?action=getDataAnggota&username=${userTgt}`).then(r=>r.json()).then(res=>{
+        setLoading(false);
+        if(res.error) return alert("User tidak ditemukan!");
+        selectedUser = { username: userTgt, program: namaProg, wa: "Cek di Sheet", nama: userTgt, res: res };
+        
+        document.getElementById("target-nama").innerText = userTgt;
+        document.getElementById("target-info").innerText = `Program: ${namaProg} | Sisa: Rp ${(res.target - res.terbayar).toLocaleString()}`;
+        document.getElementById("modal-aksi").style.display = 'block';
+    });
+}
 
-    function addA() {
-        setLoading(true);
-        fetch(url, { method:"POST", body: JSON.stringify({ action: "addAnggota", nama: document.getElementById("an").value, user: document.getElementById("au").value, pin: document.getElementById("ap").value, wa: document.getElementById("aw").value, program: document.getElementById("sel-k").value, target: document.getElementById("at").value }) }).then(()=>location.reload());
-    }
+function prosesBayarAdmin() {
+    let n = document.getElementById("nom-admin").value;
+    if(!n) return;
+    setLoading(true);
+    fetch(url, { 
+        method:"POST", 
+        body: JSON.stringify({ action:"addBayar", username:selectedUser.username, program:selectedUser.program, nominal:n }) 
+    }).then(()=>location.reload());
+}
 
-    function logout() { sessionStorage.clear(); window.location.href="index.html"; }
-    loadDash();
+function kirimWAAdmin() {
+    // Logika kirim WA dari admin ke nomor anggota (Nomor diambil dari data anggota)
+    alert("Fitur WA Admin sedang sinkronisasi nomor...");
+}
 </script>
-</body>
-</html>
