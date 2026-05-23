@@ -144,18 +144,25 @@
                 const result = await response.json();
 
                 if (result.status === "success") {
-                    tampilkanNotifier("Login Sukses! Mengalihkan...", "success");
-                    sessionStorage.setItem("user_aktif", JSON.stringify(result.user));
+    tampilkanNotifier("Login Sukses! Mengalihkan...", "success");
+    sessionStorage.setItem("user_aktif", JSON.stringify(result.user));
 
-                    setTimeout(() => {
-                        if (result.user.role === "admin") {
-                            window.location.href = "admin.html";
-                        } else {
-                            window.location.href = "anggota.html";
-                        }
-                    }, 1500);
+    // Menghindari error akibat perbedaan huruf besar/kecil di Google Sheets (diubah ke huruf kecil semua)
+    const roleUser = result.user.role.toLowerCase().trim();
 
-                } else {
+    setTimeout(() => {
+        if (roleUser === "admin") {
+            window.location.href = "admin.html";
+        } else if (roleUser === "anggota") {
+            window.location.href = "anggota.html";
+        } else {
+            tampilkanNotifier("Role akun tidak dikenali (" + result.user.role + "). Hubungi admin.", "error");
+            btnLogin.disabled = false;
+            btnLogin.innerText = "LOGIN";
+        }
+    }, 1200);
+
+} else {
                     tampilkanNotifier(result.message, "error");
                     btnLogin.disabled = false;
                     btnLogin.innerText = "LOGIN";
