@@ -175,7 +175,7 @@
     function kirimWAAdmin() {
         let sisa = (selectedUser.target - selectedUser.terbayar) <= 0 ? "*SELESAI*" : `Rp. ${(selectedUser.target - selectedUser.terbayar).toLocaleString()}`;
         let rText = ""; selectedUser.riwayat.forEach(r => rText += `${r.tanggal} - Rp. ${r.nominal.toLocaleString()}\n`);
-        let pesan = `Assalaamu'alaikum,\nMas ${selectedUser.namaAsli.toUpperCase()}, Anda bisa cek di link https://mtagentungan.github.io/ dengan akun:\nUsername: ${selectedUser.namaAsli.toUpperCase()} \nPIN: 1234 rincian *${selectedUser.program}* :\n\nTarget: Rp. ${selectedUser.target.toLocaleString()}\nTitip: Rp. ${selectedUser.terbayar.toLocaleString()}\nKekurangan: ${sisa}\n\nRiwayat:\n${rText}\n> _Bendahara II Kelompok Bancak_`;
+        let pesan = `Assalaamu'alaikum,\nMas ${selectedUser.namaAsli.toUpperCase()}, Anda bisa cek di link https://mtagentungan.github.io/ dengan akun:\nUsername: ${selectedUser.user} \nPIN: ${selectedUser.pin} \nRincian *${selectedUser.program}* :\n\nTarget: Rp. ${selectedUser.target.toLocaleString()}\nTitip: Rp. ${selectedUser.terbayar.toLocaleString()}\nKekurangan: ${sisa}\n\nRiwayat:\n${rText}\n> _Bendahara II Kelompok Bancak_`;
         window.open(`https://api.whatsapp.com/send?phone=${selectedUser.wa}&text=${encodeURIComponent(pesan)}`, "_blank");
     }
 
