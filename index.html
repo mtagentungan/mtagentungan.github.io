@@ -3,23 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Penggalangan Dana</title>
-    <!-- Menggunakan Google Fonts & Tailwind CSS untuk styling yang rapi dan cepat -->
+    <title>Aplikasi Kesanggupan Kelompok</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Roboto', sans-serif; }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4 space-y-6">
 
-    <!-- Card View Login -->
+    <div class="w-full max-w-sm text-center">
+        <h3 class="text-md font-bold text-gray-700 uppercase tracking-wider mb-3">Program Penggalangan Dana</h3>
+        
+        <div id="containerKesanggupan" class="space-y-3">
+            <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 animate-pulse text-gray-400">
+                Memuat data program...
+            </div>
+        </div>
+    </div>
+
     <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm border border-gray-200">
         <div class="text-center mb-6">
-            <h2 class="text-xl font-bold text-gray-800">Aplikasi Kesanggupan</h2>
+            <h2 class="text-xl font-bold text-gray-800">Akses Masuk</h2>
             <p class="text-sm text-gray-500 mt-1">Silakan masukan username dan PIN anda</p>
         </div>
 
-        <!-- Form Login -->
         <div class="space-y-4">
             <div>
                 <label class="block text-sm font-semibold text-gray-600 mb-1">Username</label>
@@ -39,14 +47,55 @@
             </button>
         </div>
         
-        <!-- Notifier / Pesan Error -->
         <div id="notifier" class="hidden mt-4 p-3 rounded-lg text-sm text-center"></div>
     </div>
 
     <script>
-        // GANTI dengan URL Web App dari Google Apps Script Anda tadi
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwilkljumPoUY72kJuWgHIT-b8kza58UNYtfttQ1qntPhSLCqC0F5YUT_YPJmr__xoC/exec";
+        // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyWQErivHccBi5MNchg-ZSejefeT5uUAeEo9Z4CASjcoW1bT2j-i7PYb7E3_0GrmBeI/exec";
 
+        // Jalankan fungsi ini otomatis saat halaman pertama kali dibuka
+        window.onload = function() {
+            muatDataKesanggupan();
+        };
+
+        // Fungsi mengambil data program kelompok
+        async function muatDataKesanggupan() {
+            const container = document.getElementById("containerKesanggupan");
+            try {
+                const response = await fetch(WEB_APP_URL);
+                const data = await response.json();
+
+                if (data.length === 0) {
+                    container.innerHTML = `<div class="bg-white p-4 rounded-xl shadow-md text-gray-500">Belum ada program aktif.</div>`;
+                    return;
+                }
+
+                container.innerHTML = ""; // Bersihkan loading state
+                
+                data.forEach(item => {
+                    // Format angka ke Rupiah agar rapi
+                    const formatTarget = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(item.target_kelompok);
+                    
+                    // Badge warna status
+                    const warnaStatus = item.status.toLowerCase() === 'aktif' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+
+                    container.innerHTML += `
+                        <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 flex flex-col items-center justify-center space-y-1">
+                            <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full ${warnaStatus} mb-1">${item.status}</span>
+                            <h4 class="text-lg font-bold text-gray-800">${item.nama_kesanggupan}</h4>
+                            <p class="text-sm text-gray-500">Target Kelompok: <span class="font-semibold text-emerald-600">${formatTarget}</span></p>
+                        </div>
+                    `;
+                });
+
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = `<div class="bg-white p-4 rounded-xl shadow-md text-red-500">Gagal memuat data program.</div>`;
+            }
+        }
+
+        // Fungsi Verifikasi Login
         async function prosesLogin() {
             const username = document.getElementById("TextboxUsername").value.trim();
             const pin = document.getElementById("TextboxPIN").value.trim();
@@ -58,10 +107,9 @@
                 return;
             }
 
-            // Loading state
             btnLogin.disabled = true;
             btnLogin.innerText = "MEMPROSES...";
-            tampilkanNotifier("Menghubungkan ke server...", "info");
+            tampilkanNotifier("Menghubungkan...", "info");
 
             try {
                 const response = await fetch(WEB_APP_URL, {
@@ -77,11 +125,8 @@
 
                 if (result.status === "success") {
                     tampilkanNotifier("Login Sukses! Mengalihkan...", "success");
-                    
-                    // Simpan data user ke sessionStorage agar bisa diakses di halaman berikutnya
                     sessionStorage.setItem("user_aktif", JSON.stringify(result.user));
 
-                    // Redirection berdasarkan Role
                     setTimeout(() => {
                         if (result.user.role === "admin") {
                             window.location.href = "admin.html";
