@@ -1,47 +1,122 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
+    <title>Login Penggalangan Dana</title>
+    <!-- Menggunakan Google Fonts & Tailwind CSS untuk styling yang rapi dan cepat -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Roboto', sans-serif; }
+    </style>
 </head>
-<body>
-<div id="loader"><div class="spinner"></div><div style="color:var(--accent);margin-top:15px;letter-spacing:2px;font-size:10px">AUTHENTICATING...</div></div>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
-<div class="app-container">
-    <header><h1>DZIKRA SYSTEM</h1></header>
-    <div class="card">
-        <label>Silakan masukan username dan PIN anda</label>
-        <input type="text" id="user" placeholder="Username">
-        <input type="password" id="pin" placeholder="PIN" inputmode="numeric">
-        <button class="btn" onclick="login()">LOGIN SYSTEM</button>
-        <p id="msg" style="text-align:center; font-size:0.8rem; color:#ff4b2b; margin-top:10px"></p>
-    </div>
-</div>
+    <!-- Card View Login -->
+    <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm border border-gray-200">
+        <div class="text-center mb-6">
+            <h2 class="text-xl font-bold text-gray-800">Aplikasi Kesanggupan</h2>
+            <p class="text-sm text-gray-500 mt-1">Silakan masukan username dan PIN anda</p>
+        </div>
 
-<script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbziYnblf1771V4qWK8gYcSVgJLSGHY8IM1i3qqY36fo4COt6lbJDkKXddABBImo_MN-/exec"; // GANTI DENGAN URL ANDA
-    localStorage.setItem("SCRIPT_URL", SCRIPT_URL);
+        <!-- Form Login -->
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-semibold text-gray-600 mb-1">Username</label>
+                <input type="text" id="TextboxUsername" placeholder="Masukkan username" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
 
-    function setLoading(show) { document.getElementById("loader").style.display = show ? "flex" : "none"; }
+            <div>
+                <label class="block text-sm font-semibold text-gray-600 mb-1">PIN</label>
+                <input type="password" id="TextboxPIN" placeholder="Masukkan PIN" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
 
-    function login() {
-        const u = document.getElementById("user").value;
-        const p = document.getElementById("pin").value;
-        if(!u || !p) return;
+            <button onclick="prosesLogin()" id="BtnLogin"
+                    class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-lg transition duration-200 shadow-md">
+                LOGIN
+            </button>
+        </div>
         
-        setLoading(true);
-        fetch(SCRIPT_URL, {
-            method: "POST",
-            body: JSON.stringify({ action: "login", username: u, pin: p })
-        })
-        .then(r => r.json()).then(res => {
-            setLoading(false);
-            if(res.status == "success") {
-                sessionStorage.setItem("user", JSON.stringify(res));
-                window.location.href = res.role == "admin" ? "admin.html" : "anggota.html";
-            } else { document.getElementById("msg").innerText = res.message; }
-        }).catch(() => { setLoading(false); alert("Koneksi Gagal"); });
-    }
-</script>
+        <!-- Notifier / Pesan Error -->
+        <div id="notifier" class="hidden mt-4 p-3 rounded-lg text-sm text-center"></div>
+    </div>
+
+    <script>
+        // GANTI dengan URL Web App dari Google Apps Script Anda tadi
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwilkljumPoUY72kJuWgHIT-b8kza58UNYtfttQ1qntPhSLCqC0F5YUT_YPJmr__xoC/exec";
+
+        async function prosesLogin() {
+            const username = document.getElementById("TextboxUsername").value.trim();
+            const pin = document.getElementById("TextboxPIN").value.trim();
+            const notifier = document.getElementById("notifier");
+            const btnLogin = document.getElementById("BtnLogin");
+
+            if (!username || !pin) {
+                tampilkanNotifier("Username dan PIN tidak boleh kosong", "error");
+                return;
+            }
+
+            // Loading state
+            btnLogin.disabled = true;
+            btnLogin.innerText = "MEMPROSES...";
+            tampilkanNotifier("Menghubungkan ke server...", "info");
+
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: "login",
+                        username: username,
+                        pin: pin
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.status === "success") {
+                    tampilkanNotifier("Login Sukses! Mengalihkan...", "success");
+                    
+                    // Simpan data user ke sessionStorage agar bisa diakses di halaman berikutnya
+                    sessionStorage.setItem("user_aktif", JSON.stringify(result.user));
+
+                    // Redirection berdasarkan Role
+                    setTimeout(() => {
+                        if (result.user.role === "admin") {
+                            window.location.href = "admin.html";
+                        } else {
+                            window.location.href = "anggota.html";
+                        }
+                    }, 1500);
+
+                } else {
+                    tampilkanNotifier(result.message, "error");
+                    btnLogin.disabled = false;
+                    btnLogin.innerText = "LOGIN";
+                }
+
+            } catch (error) {
+                console.error(error);
+                tampilkanNotifier("Gagal terhubung ke database.", "error");
+                btnLogin.disabled = false;
+                btnLogin.innerText = "LOGIN";
+            }
+        }
+
+        function tampilkanNotifier(pesan, tipe) {
+            const notifier = document.getElementById("notifier");
+            notifier.classList.remove("hidden", "bg-red-100", "text-red-700", "bg-green-100", "text-green-700", "bg-blue-100", "text-blue-700");
+            
+            if (tipe === "error") {
+                notifier.classList.add("bg-red-100", "text-red-700");
+            } else if (tipe === "success") {
+                notifier.classList.add("bg-green-100", "text-green-700");
+            } else {
+                notifier.classList.add("bg-blue-100", "text-blue-700");
+            }
+            notifier.innerText = pesan;
+        }
+    </script>
 </body>
 </html>
