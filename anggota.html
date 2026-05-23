@@ -3,104 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anggota - Dzikra</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Halaman Anggota</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; }
+    </style>
 </head>
-<body>
+<body class="bg-gray-100 flex flex-col items-center min-h-screen p-4 space-y-4">
 
-<div id="loader"><div class="spinner"></div><div style="color:var(--accent);margin-top:15px;letter-spacing:2px;font-size:10px">UPDATING...</div></div>
-
-<div class="app-container">
-    <header>
-        <h1 id="sapa" style="font-size:1rem">Assalamu'alaikum...</h1>
-    </header>
-
-    <div class="card" style="text-align:center">
-        <label id="prog-name">Memuat...</label>
-        <p>Target: <b id="t-p">0</b> | Titip: <b id="t-b" style="color:#00ff88">0</b></p>
-        <p style="border-top:1px solid var(--border);padding-top:10px">Sisa: <b id="t-s" style="color:#ff4b2b">0</b></p>
+    <!-- CARD VIEW KELOMPOK (RATA TENGAH) -->
+    <div id="containerKelompok" class="w-full max-w-sm text-center">
+        <!-- Terisi Otomatis via API -->
     </div>
 
-    <label style="margin-left:5px">RIWAYAT PEMBAYARAN</label>
-    <div id="riwayat" style="margin-bottom:20px"></div>
-
-    <hr style="border:0; border-top:1px solid var(--border); margin: 20px 0;">
-
-    <div style="text-align: center;">
-        <button class="btn btn-secondary" id="btn-toggle-akun" onclick="togglePengaturan()" style="font-size: 0.75rem; border-style: dashed; width: auto; padding: 10px 20px;">
-            ⚙️ PENGATURAN AKUN
-        </button>
-
-        <div id="area-pengaturan" class="card" style="display: none; margin-top: 15px; border: 1px dashed var(--accent); text-align: left;">
-            <label>USERNAME BARU</label>
-            <input type="text" id="new-user" placeholder="Ketik username baru...">
-            
-            <label>PIN BARU</label>
-            <input type="password" id="new-pin" placeholder="Ketik PIN baru..." inputmode="numeric">
-            
-            <button class="btn" onclick="updateAkun()">SIMPAN PERUBAHAN</button>
-            <button class="btn btn-secondary" onclick="togglePengaturan()" style="border:none; color: #ff4b2b; margin-top:5px">BATAL</button>
-        </div>
-    </div>
-
-    <button class="btn btn-secondary" onclick="logout()" style="margin-top: 30px;">LOGOUT SYSTEM</button>
-</div>
-
-<script>
-    const url = localStorage.getItem("SCRIPT_URL");
-    const user = JSON.parse(sessionStorage.getItem("user"));
-    
-    if(!user) window.location.href="index.html";
-    document.getElementById("sapa").innerText = "Assalamu'alaikum mas " + user.nama;
-
-    function setLoading(s) { document.getElementById("loader").style.display = s ? "flex" : "none"; }
-
-    // Fungsi Toggle Buka/Tutup Form
-    function togglePengaturan() {
-        const area = document.getElementById("area-pengaturan");
-        const btn = document.getElementById("btn-toggle-akun");
-        if (area.style.display === "none") {
-            area.style.display = "block";
-            btn.style.display = "none";
-        } else {
-            area.style.display = "none";
-            btn.style.display = "inline-block";
-        }
-    }
-
-    function loadData() {
-        setLoading(true);
-        fetch(`${url}?action=getDataAnggota&username=${user.username}`).then(r=>r.json()).then(res=>{
-            setLoading(false);
-            document.getElementById("prog-name").innerText = res.program;
-            document.getElementById("t-p").innerText = res.target.toLocaleString();
-            document.getElementById("t-b").innerText = res.terbayar.toLocaleString();
-            let sisa = res.target - res.terbayar;
-            document.getElementById("t-s").innerText = sisa <= 0 ? "SELESAI" : sisa.toLocaleString();
-            let h = ""; 
-            res.riwayat.forEach(r => h += `<div class="card" style="font-size:0.8rem;padding:10px;margin-bottom:5px"><b>${r.tanggal}</b> - Rp ${r.nominal.toLocaleString()}</div>`);
-            document.getElementById("riwayat").innerHTML = h || "<p style='text-align:center;font-size:0.7rem'>Belum ada riwayat titipan.</p>";
-        }).catch(()=>setLoading(false));
-    }
-
-    function updateAkun() {
-        const nU = document.getElementById("new-user").value;
-        const nP = document.getElementById("new-pin").value;
-        if(!nU || !nP) return alert("Isi Username dan PIN baru!");
+    <!-- MAIN CARD ANGGOTA -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 w-full max-w-sm border border-gray-200">
+        <!-- Sapaan Nama -->
+        <h2 id="sapaanNama" class="text-lg font-bold text-gray-800 mb-4">Assalamu'alaikum,</h2>
         
-        setLoading(true);
-        fetch(url, {
-            method: "POST",
-            body: JSON.stringify({ action: "updateProfile", oldUser: user.username, newUser: nU, newPin: nP })
-        }).then(r=>r.json()).then(res=>{
-            setLoading(false);
-            alert("Data berhasil diupdate! Silakan login ulang dengan data baru.");
-            logout();
-        });
-    }
+        <!-- Status Finansial Mandiri -->
+        <div class="space-y-2 border-b border-gray-100 pb-4 mb-4 text-sm">
+            <div class="flex justify-between">
+                <span class="text-gray-500">Kesanggupan total anda:</span>
+                <span id="txtKesanggupanPribadi" class="font-bold text-gray-800">Rp. 0</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-500">Sudah membayar:</span>
+                <span id="txtSudahBayar" class="font-bold text-emerald-600">Rp. 0</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-500">Kekurangan:</span>
+                <span id="txtSisaKekurangan" class="font-bold text-red-500">Rp. 0</span>
+            </div>
+        </div>
 
-    function logout() { sessionStorage.clear(); window.location.href="index.html"; }
-    loadData();
-</script>
+        <!-- RINCIAN ANGSURAN (CICILAN) -->
+        <div class="mt-4">
+            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Rincian Angsuran</h3>
+            <div id="listRiwayatCicilan" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                <div class="text-xs text-gray-400 italic text-center py-2 animate-pulse">Memuat riwayat pembayaran...</div>
+            </div>
+        </div>
+
+        <!-- TOMBOL LOGOUT -->
+        <button onclick="prosesLogout()" class="w-full mt-6 bg-gray-100 hover:bg-red-50 hover:text-red-600 text-gray-600 font-bold py-2 rounded-xl text-sm transition text-center border border-gray-200">
+            🚪 LOGOUT
+        </button>
+    </div>
+
+    <script>
+        // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzgMy-DIsWgNWWS6zirTg0c999aGEqfj65RMQeBoXMgGIAAQ4A6UGsx9Q4ChkeblNSO/exec";
+        
+        let userAktif = null;
+
+        window.onload = function() {
+            // Proteksi Halaman
+            const sessionData = sessionStorage.getItem("user_aktif");
+            if (!sessionData) {
+                window.location.href = "index.html";
+                return;
+            }
+            userAktif = JSON.parse(sessionData);
+            
+            // Set Sapaan Nama Akun
+            document.getElementById("sapaanNama").innerText = `Assalamu'alaikum mas ${userAktif.nama},`;
+            
+            // Muat Data Finansial Kelompok & Pribadi
+            muatDataKelompok();
+            muatDataFinansialAnggota();
+        };
+
+        const Rupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka);
+
+        // 1. Memuat Card View Kelompok atas
+        async function muatDataKelompok() {
+            const container = document.getElementById("containerKelompok");
+            try {
+                const response = await fetch(`${WEB_APP_URL}?action=get_kelompok`);
+                const data = await response.json();
+                if(data.length > 0) {
+                    const item = data[0]; 
+                    const warnaStatus = item.status.toLowerCase() === 'aktif' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+                    container.innerHTML = `
+                        <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 flex flex-col items-center justify-center">
+                            <span class="px-2.5 py-0.5 text-xs font-bold rounded-full ${warnaStatus} mb-1 uppercase">${item.status}</span>
+                            <h4 class="text-md font-bold text-gray-800">${item.nama_kesanggupan}</h4>
+                            <p class="text-xs text-gray-500">Target Kelompok: <span class="font-semibold text-emerald-600">${Rupiah(item.target_kelompok)}</span> | Terkumpul: <span class="font-semibold text-blue-600">${Rupiah(item.total_terkumpul)}</span></p>
+                        </div>
+                    `;
+                }
+            } catch (e) { console.error("Gagal muat data kelompok", e); }
+        }
+
+        // 2. Memuat data personal cicilan anggota
+        async function muatDataFinansialAnggota() {
+            try {
+                const response = await fetch(`${WEB_APP_URL}?action=get_cicilan_anggota&id_anggota=${userAktif.id_anggota}`);
+                const resData = await response.json();
+                
+                const kspPribadi = parseFloat(userAktif.kesanggupan_pribadi) || 0;
+                const totalTitip = resData.total_nyicil || 0;
+                const sisa = kspPribadi - totalTitip;
+
+                document.getElementById("txtKesanggupanPribadi").innerText = Rupiah(kspPribadi);
+                document.getElementById("txtSudahBayar").innerText = Rupiah(totalTitip);
+                
+                if(sisa <= 0) {
+                    document.getElementById("txtSisaKekurangan").innerText = "SELESAI";
+                    document.getElementById("txtSisaKekurangan").className = "font-bold text-green-600";
+                } else {
+                    document.getElementById("txtSisaKekurangan").innerText = Rupiah(sisa);
+                    document.getElementById("txtSisaKekurangan").className = "font-bold text-red-500";
+                }
+
+                // Render Rincian List Angsuran
+                const listContainer = document.getElementById("listRiwayatCicilan");
+                listContainer.innerHTML = "";
+
+                if(resData.riwayat.length === 0) {
+                    listContainer.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-4">Belum ada riwayat angsuran.</p>`;
+                } else {
+                    resData.riwayat.forEach(row => {
+                        listContainer.innerHTML += `
+                            <div class="text-xs bg-gray-50 p-2.5 rounded-lg border border-gray-100 flex justify-between text-gray-600">
+                                <span>📅 ${row.tanggal} | 🕒 ${row.jam}</span>
+                                <span class="font-semibold text-gray-800">${Rupiah(row.nominal)}</span>
+                            </div>
+                        `;
+                    });
+                }
+            } catch(e) { 
+                console.error(e); 
+                document.getElementById("listRiwayatCicilan").innerHTML = `<p class="text-xs text-red-500 text-center">Gagal memuat riwayat.</p>`;
+            }
+        }
+
+        // Logout
+        function prosesLogout() {
+            sessionStorage.clear();
+            window.location.href = "index.html";
+        }
+    </script>
 </body>
 </html>
