@@ -54,7 +54,7 @@
 
     <script>
         // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyat3S_4tpMDcZTnWVBItsF9d6PkJiTU6dzIdRWUkfWIXuxsO-nxmkJTZdjbEk-GkP5/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwpjgDWg21mxw6zf1eF44S3_eug7g7U-WAlffW6SC1Bj62G-5AdaX7g6Ms8qWeUifKD/exec";
         
         let userAktif = null;
 
@@ -99,55 +99,62 @@
 
         // 2. Memuat data personal cicilan anggota
         async function muatDataFinansialAnggota() {
-            try {
-                const response = await fetch(`${WEB_APP_URL}?action=get_cicilan_anggota&id_anggota=${userAktif.id_anggota}`);
-                const resData = await response.json();
-                
-                const kspPribadi = parseFloat(userAktif.kesanggupan_pribadi) || 0;
-                const totalTitip = resData.total_nyicil || 0;
-                const sisa = kspPribadi - totalTitip;
+    try {
+        const response = await fetch(`${WEB_APP_URL}?action=get_cicilan_anggota&id_anggota=${userAktif.id_anggota}`);
+        const resData = await response.json();
+        
+        const kspPribadi = parseFloat(userAktif.kesanggupan_pribadi) || 0;
+        const totalTitip = resData.total_nyicil || 0;
+        const sisa = kspPribadi - totalTitip;
 
-                document.getElementById("txtKesanggupanPribadi").innerText = Rupiah(kspPribadi);
-                document.getElementById("txtSudahBayar").innerText = Rupiah(totalTitip);
-                
-                if(sisa <= 0) {
-                    document.getElementById("txtSisaKekurangan").innerText = "SELESAI";
-                    document.getElementById("txtSisaKekurangan").className = "font-bold text-green-600";
-                } else {
-                    document.getElementById("txtSisaKekurangan").innerText = Rupiah(sisa);
-                    document.getElementById("txtSisaKekurangan").className = "font-bold text-red-500";
+        document.getElementById("txtKesanggupanPribadi").innerText = Rupiah(kspPribadi);
+        document.getElementById("txtSudahBayar").innerText = Rupiah(totalTitip);
+        
+        if(sisa <= 0) {
+            document.getElementById("txtSisaKekurangan").innerText = "SELESAI";
+            document.getElementById("txtSisaKekurangan").className = "font-bold text-green-600";
+        } else {
+            document.getElementById("txtSisaKekurangan").innerText = Rupiah(sisa);
+            document.getElementById("txtSisaKekurangan").className = "font-bold text-red-500";
+        }
+
+        // Render Rincian List Angsuran
+        const listContainer = document.getElementById("listRiwayatCicilan");
+        listContainer.innerHTML = "";
+
+        if(resData.riwayat.length === 0) {
+            listContainer.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-4">Belum ada riwayat angsuran.</p>`;
+        } else {
+            resData.riwayat.forEach(row => {
+                // Menghapus 2 digit angka tahun depan (misal 2026 -> 26) agar ringkas
+                let tglFormat = row.tanggal;
+                if (tglFormat.includes("/")) {
+                    const part = tglFormat.split("/");
+                    if (part[2] && part[2].length === 4) {
+                        tglFormat = `${part[0]}/${part[1]}/${part[2].substring(2)}`;
+                    }
                 }
 
-                // Render Rincian List Angsuran
-                const listContainer = document.getElementById("listRiwayatCicilan");
-                listContainer.innerHTML = "";
+                // Memastikan jam hanya mengambil Jam:Menit saja (menghilangkan detik jika ada)
+                let jamFormat = row.jam;
+                if (jamFormat.includes(":")) {
+                    const partJam = jamFormat.split(":");
+                    jamFormat = `${partJam[0]}:${partJam[1]}`;
+                }
 
-                if(resData.riwayat.length === 0) {
-                    listContainer.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-4">Belum ada riwayat angsuran.</p>`;
-                } else {
-                    resData.riwayat.forEach(row => {
-    // Memastikan format tanggal aman (misal dari dd/MM/yyyy menjadi dd/MM/yy)
-    let tanggalRingkas = row.tanggal;
-    if (tanggalRingkas.includes("/")) {
-        const part = tanggalRingkas.split("/");
-        if (part[2] && part[2].length === 4) {
-            tanggalRingkas = `${part[0]}/${part[1]}/${part[2].substring(2)}`;
+                listContainer.innerHTML += `
+                    <div class="text-xs bg-gray-50 p-2.5 rounded-lg border border-gray-100 flex justify-between text-gray-600 items-center">
+                        <span>📅 ${tglFormat} &nbsp;|&nbsp; 🕒 ${jamFormat}</span>
+                        <span class="font-bold text-gray-800">${Rupiah(row.nominal)}</span>
+                    </div>
+                `;
+            });
         }
+    } catch(e) { 
+        console.error(e); 
+        document.getElementById("listRiwayatCicilan").innerHTML = `<p class="text-xs text-red-500 text-center">Gagal memuat riwayat.</p>`;
     }
-
-    listContainer.innerHTML += `
-        <div class="text-xs bg-gray-50 p-2.5 rounded-lg border border-gray-100 flex justify-between text-gray-600">
-            <span>📅 ${tanggalRingkas} | 🕒 ${row.jam}</span>
-            <span class="font-semibold text-gray-800">${Rupiah(row.nominal)}</span>
-        </div>
-    `;
-});
-                }
-            } catch(e) { 
-                console.error(e); 
-                document.getElementById("listRiwayatCicilan").innerHTML = `<p class="text-xs text-red-500 text-center">Gagal memuat riwayat.</p>`;
-            }
-        }
+}
 
         // Logout
         function prosesLogout() {
