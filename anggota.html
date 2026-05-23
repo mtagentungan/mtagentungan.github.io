@@ -134,7 +134,7 @@
                 let tglFormat = objekTanggal.toLocaleDateString('id-ID', opsiTanggal);
                 
                 // Buat huruf pertama hari menjadi kecil sesuai contoh (misal: "Selasa" -> "selasa")
-                tglFormat = tglFormat.toLowerCase();
+                tglFormat = tglFormat.toUpperCase();
 
                 // 3. Ambil teks jam mentah (contoh: "Sat Dec 30 1899 15:52...")
                 const teksJamMentah = row.jam;
