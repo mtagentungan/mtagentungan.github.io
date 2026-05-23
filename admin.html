@@ -3,207 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Dzikra System</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Halaman Admin - Manajemen Kesanggupan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; color: var(--text); }
-        th { border-bottom: 2px solid var(--accent); padding: 10px; text-align: left; font-size: 0.7rem; color: var(--accent); }
-        td { border-bottom: 1px solid var(--border); padding: 10px; font-size: 0.8rem; vertical-align: middle; }
-        .btn-mini { background: var(--accent); border: none; border-radius: 5px; padding: 5px 10px; color: #000; font-weight: bold; cursor: pointer; }
+        body { font-family: 'Roboto', sans-serif; }
     </style>
 </head>
-<body>
+<body class="bg-gray-100 flex flex-col items-center min-h-screen p-4 space-y-6">
 
-<div id="loader">
-    <div class="spinner"></div>
-    <div style="color:var(--accent);margin-top:15px;letter-spacing:2px;font-size:10px">MENGHUBUNGKAN...</div>
-</div>
-
-<div class="app-container">
-    <header>
-        <h1>ADMIN PANEL</h1>
-        <p id="adm-info" style="font-size: 0.7rem; color: var(--accent);"></p>
-    </header>
-    
-    <div style="display:flex; gap:10px; margin-bottom:15px">
-        <button class="btn" style="font-size:0.7rem; padding:10px" onclick="openM('modal-k')">+ KESANGGUPAN</button>
-        <button class="btn" style="font-size:0.7rem; padding:10px" onclick="openM('modal-a')">+ ANGGOTA</button>
+    <!-- HEADER ADMIN -->
+    <div class="w-full max-w-md flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+        <div>
+            <h1 class="text-sm font-bold text-gray-500 uppercase tracking-wider">Panel Kontrol</h1>
+            <p class="text-xs text-gray-400">Selamat Datang, Admin</p>
+        </div>
+        <button onclick="prosesLogout()" class="text-xs bg-red-50 hover:bg-red-100 text-red-600 font-bold py-1.5 px-3 rounded-lg border border-red-200 transition">
+            LOGOUT
+        </button>
     </div>
 
-    <div id="dash">Memuat data dashboard...</div>
-    
-    <button class="btn btn-secondary" onclick="logout()" style="margin-top:20px">LOGOUT SYSTEM</button>
-</div>
-
-<div id="modal-k" class="card modal" style="display:none; position:fixed; top:15%; left:5%; width:90%; z-index:100; background:#161b22; border:1px solid var(--accent)">
-    <label>NAMA KESANGGUPAN</label>
-    <input type="text" id="nk" placeholder="Contoh: Tanah Ponpes">
-    <label>TARGET TOTAL KELOMPOK (Rp)</label>
-    <input type="number" id="tk" placeholder="0">
-    <button class="btn" onclick="addK()">SIMPAN PROGRAM</button>
-    <button class="btn btn-secondary" onclick="closeM('modal-k')">BATAL</button>
-</div>
-
-<div id="modal-a" class="card modal" style="display:none; position:fixed; top:5%; left:5%; width:90%; z-index:100; background:#161b22; border:1px solid var(--accent)">
-    <label>DATA ANGGOTA BARU</label>
-    <input type="text" id="an" placeholder="Nama Lengkap">
-    <input type="text" id="au" placeholder="Username">
-    <input type="password" id="ap" placeholder="PIN (Angka)">
-    <input type="number" id="aw" placeholder="628xxx (WA)">
-    <label>PILIH KESANGGUPAN</label>
-    <select id="sel-k"></select>
-    <input type="number" id="at" placeholder="Target Pribadi (Rp)">
-    <button class="btn" onclick="addA()">DAFTARKAN</button>
-    <button class="btn btn-secondary" onclick="closeM('modal-a')">BATAL</button>
-</div>
-
-<div id="modal-list-anggota" class="card modal" style="display:none; position:fixed; top:5%; left:2%; width:96%; height:90%; z-index:1000; background:#0b0e14; border:1px solid var(--accent); overflow-y: auto;">
-    <h3 id="judul-program" style="text-align:center; color:var(--accent); margin-top:10px">Daftar Anggota</h3>
-    <div style="overflow-x: auto; padding: 5px;">
-        <table>
-            <thead>
-                <tr>
-                    <th>NAMA</th>
-                    <th style="text-align: right;">SISA</th>
-                    <th style="text-align: center;">OPSI</th>
-                </tr>
-            </thead>
-            <tbody id="tabel-body-anggota"></tbody>
-        </table>
+    <!-- SEKSYEN KARTU KESANGGUPAN GLOBAL (RATA TENGAH) -->
+    <div class="w-full max-w-md text-center">
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Program Penggalangan Dana</h3>
+        <div id="containerKelompokAdmin" class="space-y-4">
+            <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 animate-pulse text-gray-400 text-sm">
+                Memuat data program kelompok...
+            </div>
+        </div>
     </div>
-    <button class="btn btn-secondary" onclick="closeM('modal-list-anggota')" style="margin-top:20px">TUTUP</button>
-</div>
 
-<div id="modal-aksi" class="card modal" style="display:none; position:fixed; top:15%; left:5%; width:90%; z-index:1001; background:#161b22; border:2px solid var(--accent)">
-    <h3 id="target-nama" style="text-align:center; color:var(--accent); margin-bottom:5px">Nama Anggota</h3>
-    <p id="target-info" style="text-align:center; font-size:0.8rem; margin-bottom:15px"></p>
-    
-    <label>NOMINAL NYICIL (Rp)</label>
-    <input type="number" id="nom-admin" placeholder="0">
-    <button class="btn" onclick="prosesBayarAdmin()">SIMPAN PEMBAYARAN</button>
-    
-    <button class="btn btn-secondary" onclick="kirimWAAdmin()" style="margin-top:10px">KIRIM RINCIAN WA</button>
-    <button class="btn btn-secondary" onclick="closeM('modal-aksi')" style="border-color:#ff4b2b; color:#ff4b2b">BATAL</button>
-</div>
+    <!-- NOTIFIER JIKA STATUS SELESAI DIKLIK -->
+    <div id="popupNotifier" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl p-5 max-w-xs w-full text-center shadow-2xl border border-gray-100">
+            <span class="text-3xl">🚫</span>
+            <h4 class="text-md font-bold text-gray-800 mt-2">Program Telah Selesai</h4>
+            <p class="text-xs text-gray-500 mt-1">Kesanggupan ini sudah dinyatakan selesai dan tidak dapat diubah lagi.</p>
+            <button onclick="tutupNotifier()" class="mt-4 w-full bg-gray-800 text-white text-xs font-bold py-2 rounded-lg hover:bg-gray-900">Mengerti</button>
+        </div>
+    </div>
 
-<script>
-    const url = localStorage.getItem("SCRIPT_URL");
-    const user = JSON.parse(sessionStorage.getItem("user"));
-    let selectedUser = {}; 
+    <!-- DAFTAR ANGGOTA (MUNCUL JIKA PROGRAM AKTIF DIKLIK) -->
+    <div id="boxDaftarAnggota" class="hidden w-full max-w-md bg-white rounded-2xl shadow-lg p-5 border border-gray-200">
+        <div class="border-b border-gray-100 pb-3 mb-4">
+            <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider">Data Lengkap Anggota</h3>
+            <p id="namaProgramTerpilih" class="text-xs text-emerald-600 font-medium mt-0.5"></p>
+        </div>
+        
+        <!-- List Anggota Elegan ala CardView -->
+        <div id="listAnggotaAdmin" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+            <!-- Data Terisi Otomatis -->
+        </div>
+    </div>
 
-    if(!user || user.role !== 'admin') window.location.href="index.html";
-    document.getElementById("adm-info").innerText = "Admin: " + user.nama;
+    <script>
+        // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzaScEjzHFGch0m83JKJaSSV64AeS-6ndmhmfFO9DFyQQ3rM9ePQw0Fy2-Vz6cillJh/exec";
 
-    function setLoading(s) { document.getElementById("loader").style.display = s ? "flex" : "none"; }
-    function openM(id) { document.getElementById(id).style.display='block'; if(id=='modal-a') loadPrograms(); }
-    function closeM(id) { document.getElementById(id).style.display='none'; }
+        window.onload = function() {
+            // Proteksi Halaman Admin
+            const sessionData = sessionStorage.getItem("user_aktif");
+            if (!sessionData) {
+                window.location.href = "index.html";
+                return;
+            }
+            const user = JSON.parse(sessionData);
+            if (user.role.toLowerCase() !== "admin") {
+                window.location.href = "anggota.html";
+                return;
+            }
 
-    // Dashboard utama (Kartu Program)
-    function loadDash() {
-        setLoading(true);
-        fetch(url + "?action=getDashboardAdmin")
-        .then(r => r.json())
-        .then(data => {
-            setLoading(false);
-            let h = "";
-            data.forEach(i => {
-                h += `
-                <div class="card" style="text-align:center" onclick="bukaProgram('${i.nama}')">
-                    <h3 style="color:var(--accent);margin:0">${i.nama}</h3>
-                    <p style="font-size:0.8rem; margin:10px 0">
-                        Total Masuk: <b>Rp ${i.total.toLocaleString()}</b><br>
-                        Status: <b style="color:var(--accent)">${i.status.toUpperCase()}</b>
-                    </p>
-                    <small style="color:var(--accent)">Klik untuk detail anggota</small>
-                </div>`;
-            });
-            document.getElementById("dash").innerHTML = h || "<p>Belum ada program.</p>";
-        }).catch(() => setLoading(false));
-    }
+            muatDataKelompokAdmin();
+        };
 
-    // Tabel Anggota per Program
-    function bukaProgram(namaProg) {
-        setLoading(true);
-        fetch(`${url}?action=getListAnggotaPerProgram&program=${namaProg}`)
-        .then(r => r.json())
-        .then(res => {
-            setLoading(false);
-            document.getElementById("judul-program").innerText = namaProg;
-            let html = "";
-            res.forEach(a => {
-                let sisa = a.target - a.terbayar;
-                let sisaWarna = sisa <= 0 ? "#00ff88" : "#ff4b2b";
-                let sisaText = sisa <= 0 ? "LUNAS" : sisa.toLocaleString();
+        const Rupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka);
 
-                html += `
-                <tr>
-                    <td>${a.namaAsli}<br><small style="color:var(--accent)">@${a.username}</small></td>
-                    <td style="text-align: right; color:${sisaWarna}; font-weight:bold;">${sisaText}</td>
-                    <td style="text-align: center;">
-                        <button class="btn-mini" onclick="bukaAksi('${a.username}', '${namaProg}')">⚙️</button>
-                    </td>
-                </tr>`;
-            });
-            document.getElementById("tabel-body-anggota").innerHTML = html || "<tr><td colspan='3' style='text-align:center'>Kosong</td></tr>";
-            openM('modal-list-anggota');
-        }).catch(() => setLoading(false));
-    }
+        // 1. Ambil data kesanggupan kelompok global
+        async function muatDataKelompokAdmin() {
+            const container = document.getElementById("containerKelompokAdmin");
+            try {
+                const response = await fetch(`${WEB_APP_URL}?action=get_kelompok`);
+                const data = await response.json();
 
-    // Modal Aksi (Nyicil/WA)
-    function bukaAksi(username, namaProg) {
-        closeM('modal-list-anggota');
-        setLoading(true);
-        fetch(`${url}?action=getDetailAnggotaAdmin&username=${username}&program=${namaProg}`)
-        .then(r => r.json())
-        .then(res => {
-            setLoading(false);
-            selectedUser = { username: username, program: namaProg, namaAsli: res.namaAsli, wa: res.wa, target: res.target, terbayar: res.terbayar, riwayat: res.riwayat, pin: res.pin };
-            document.getElementById("target-nama").innerText = res.namaAsli.toUpperCase();
-            document.getElementById("target-info").innerText = `Sisa: Rp ${(res.target - res.terbayar).toLocaleString()}`;
-            document.getElementById("modal-aksi").style.display = 'block';
-        }).catch(() => setLoading(false));
-    }
+                if (data.length === 0) {
+                    container.innerHTML = `<div class="bg-white p-4 rounded-xl shadow-md text-gray-500 text-xs">Belum ada program kesanggupan.</div>`;
+                    return;
+                }
 
-    function prosesBayarAdmin() {
-        let n = document.getElementById("nom-admin").value;
-        if(!n || n <= 0) return;
-        setLoading(true);
-        fetch(url, { method:"POST", body: JSON.stringify({ action:"addBayar", username:selectedUser.username, program:selectedUser.program, nominal:n }) })
-        .then(() => location.reload());
-    }
+                container.innerHTML = "";
+                data.forEach(item => {
+                    const warnaStatus = item.status.toLowerCase() === 'aktif' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+                    
+                    // Membuat elemen card yang bisa diklik
+                    const cardHTML = `
+                        <div onclick="handleCardKlik('${item.id_kesanggupan}', '${item.nama_kesanggupan}', '${item.status}')" 
+                             class="bg-white p-5 rounded-xl shadow-md border border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:border-emerald-500 transition duration-200">
+                            <span class="px-3 py-0.5 text-[10px] font-bold rounded-full ${warnaStatus} mb-2 uppercase">${item.status}</span>
+                            <h4 class="text-md font-bold text-gray-800 mb-2">${item.nama_kesanggupan}</h4>
+                            <div class="w-full space-y-1 text-xs border-t border-gray-100 pt-2 text-center">
+                                <div><span class="text-gray-400">Total Terkumpul:</span> <span class="font-semibold text-emerald-600">${Rupiah(item.total_terkumpul)}</span></div>
+                                <div><span class="text-gray-400">Sisa Kekurangan:</span> <span class="font-semibold text-red-500">${Rupiah(item.sisa_kekurangan)}</span></div>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += cardHTML;
+                });
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = `<div class="bg-white p-4 rounded-xl shadow-md text-red-500 text-xs">Gagal memuat data keuangan.</div>`;
+            }
+        }
 
-    function kirimWAAdmin() {
-        let sisa = (selectedUser.target - selectedUser.terbayar) <= 0 ? "*SELESAI*" : `Rp. ${(selectedUser.target - selectedUser.terbayar).toLocaleString()}`;
-        let rText = ""; selectedUser.riwayat.forEach(r => rText += `${r.tanggal} - Rp. ${r.nominal.toLocaleString()}\n`);
-        let pesan = `Assalaamu'alaikum,\nMas ${selectedUser.namaAsli.toUpperCase()}, Anda bisa cek di link https://mtagentungan.github.io/ dengan akun:\nUsername: ${selectedUser.username} \nPIN: ${selectedUser.pin} \nRincian *${selectedUser.program}* :\n\nTarget: Rp. ${selectedUser.target.toLocaleString()}\nTitip: Rp. ${selectedUser.terbayar.toLocaleString()}\nKekurangan: ${sisa}\n\nRiwayat:\n${rText}\n> _Bendahara II Kelompok Bancak_`;
-        window.open(`https://api.whatsapp.com/send?phone=${selectedUser.wa}&text=${encodeURIComponent(pesan)}`, "_blank");
-    }
+        // 2. Logika ketika Card Program diklik
+        function handleCardKlik(idKsp, namaKsp, status) {
+            if (status.toLowerCase() === 'selesai') {
+                document.getElementById("popupNotifier").classList.remove("hidden");
+                document.getElementById("boxDaftarAnggota").classList.add("hidden");
+            } else {
+                document.getElementById("popupNotifier").classList.add("hidden");
+                document.getElementById("namaProgramTerpilih").innerText = namaKsp;
+                document.getElementById("boxDaftarAnggota").classList.remove("hidden");
+                
+                // Panggil fungsi tiruan/sementara untuk memuat list anggota (akan dihubungkan ke database di langkah berikutnya)
+                muatDaftarAnggotaPalsu();
+            }
+        }
 
-    // Fungsi Tambahan
-    function loadPrograms() {
-        fetch(url + "?action=getProgramList").then(r=>r.json()).then(d=>{
-            let o = ""; d.forEach(p => o += `<option value="${p}">${p}</option>`);
-            document.getElementById("sel-k").innerHTML = o;
-        });
-    }
+        function tutupNotifier() {
+            document.getElementById("popupNotifier").classList.add("hidden");
+        }
 
-    function addK() {
-        let n = document.getElementById("nk").value;
-        let t = document.getElementById("tk").value;
-        if(!n || !t) return;
-        setLoading(true);
-        fetch(url, { method:"POST", body: JSON.stringify({ action: "addKesanggupan", id: Date.now(), nama: n, target: t }) }).then(()=>location.reload());
-    }
+        // Fungsi sementara sebelum ditarik dari database sesungguhnya di langkah 2
+        function muatDaftarAnggotaPalsu() {
+            const listContainer = document.getElementById("listAnggotaAdmin");
+            listContainer.innerHTML = `
+                <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs text-gray-700 space-y-1 shadow-sm">
+                    <div class="font-bold text-gray-800">WAWAN PRASETYO</div>
+                    <div>📱 WA: 085725xxxxxx</div>
+                    <div>💰 Kesanggupan: ${Rupiah(500000)}</div>
+                    <div class="bg-white p-2 rounded-lg border border-gray-200 mt-2 text-[11px] text-gray-500 space-y-0.5">
+                        <div>👤 Username: <span class="font-mono text-gray-800">maswe</span></div>
+                        <div>🔑 PIN: <span class="font-mono text-gray-800">1234</span></div>
+                    </div>
+                </div>
+            `;
+        }
 
-    function addA() {
-        const body = { action: "addAnggota", nama: document.getElementById("an").value, user: document.getElementById("au").value, pin: document.getElementById("ap").value, wa: document.getElementById("aw").value, program: document.getElementById("sel-k").value, target: document.getElementById("at").value };
-        if(!body.user || !body.pin) return;
-        setLoading(true);
-        fetch(url, { method:"POST", body: JSON.stringify(body) }).then(()=>location.reload());
-    }
-
-    function logout() { sessionStorage.clear(); window.location.href="index.html"; }
-    loadDash();
-</script>
+        function prosesLogout() {
+            sessionStorage.clear();
+            window.location.href = "index.html";
+        }
+    </script>
 </body>
 </html>
