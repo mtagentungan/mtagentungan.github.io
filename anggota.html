@@ -126,13 +126,22 @@
                     listContainer.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-4">Belum ada riwayat angsuran.</p>`;
                 } else {
                     resData.riwayat.forEach(row => {
-                        listContainer.innerHTML += `
-                            <div class="text-xs bg-gray-50 p-2.5 rounded-lg border border-gray-100 flex justify-between text-gray-600">
-                                <span>📅 ${row.tanggal} | 🕒 ${row.jam}</span>
-                                <span class="font-semibold text-gray-800">${Rupiah(row.nominal)}</span>
-                            </div>
-                        `;
-                    });
+    // Memastikan format tanggal aman (misal dari dd/MM/yyyy menjadi dd/MM/yy)
+    let tanggalRingkas = row.tanggal;
+    if (tanggalRingkas.includes("/")) {
+        const part = tanggalRingkas.split("/");
+        if (part[2] && part[2].length === 4) {
+            tanggalRingkas = `${part[0]}/${part[1]}/${part[2].substring(2)}`;
+        }
+    }
+
+    listContainer.innerHTML += `
+        <div class="text-xs bg-gray-50 p-2.5 rounded-lg border border-gray-100 flex justify-between text-gray-600">
+            <span>📅 ${tanggalRingkas} | 🕒 ${row.jam}</span>
+            <span class="font-semibold text-gray-800">${Rupiah(row.nominal)}</span>
+        </div>
+    `;
+});
                 }
             } catch(e) { 
                 console.error(e); 
