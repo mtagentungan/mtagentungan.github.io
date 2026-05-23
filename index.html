@@ -12,22 +12,26 @@
 </head>
 <body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4 space-y-6">
 
+    <!-- SEKSYEN KARTU KESANGGUPAN (CARD VIEW) RATA TENGAH -->
     <div class="w-full max-w-sm text-center">
         <h3 class="text-md font-bold text-gray-700 uppercase tracking-wider mb-3">Program Penggalangan Dana</h3>
         
-        <div id="containerKesanggupan" class="space-y-3">
+        <!-- Wadah List Program -->
+        <div id="containerKesanggupan" class="space-y-4">
             <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 animate-pulse text-gray-400">
-                Memuat data program...
+                Memuat rincian program keuangan...
             </div>
         </div>
     </div>
 
+    <!-- CARD VIEW LOGIN -->
     <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm border border-gray-200">
         <div class="text-center mb-6">
             <h2 class="text-xl font-bold text-gray-800">Akses Masuk</h2>
             <p class="text-sm text-gray-500 mt-1">Silakan masukan username dan PIN anda</p>
         </div>
 
+        <!-- Form Login -->
         <div class="space-y-4">
             <div>
                 <label class="block text-sm font-semibold text-gray-600 mb-1">Username</label>
@@ -47,19 +51,19 @@
             </button>
         </div>
         
+        <!-- Notifier / Pesan Error -->
         <div id="notifier" class="hidden mt-4 p-3 rounded-lg text-sm text-center"></div>
     </div>
 
     <script>
         // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyWQErivHccBi5MNchg-ZSejefeT5uUAeEo9Z4CASjcoW1bT2j-i7PYb7E3_0GrmBeI/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzgMy-DIsWgNWWS6zirTg0c999aGEqfj65RMQeBoXMgGIAAQ4A6UGsx9Q4ChkeblNSO/exec";
 
-        // Jalankan fungsi ini otomatis saat halaman pertama kali dibuka
         window.onload = function() {
             muatDataKesanggupan();
         };
 
-        // Fungsi mengambil data program kelompok
+        // Fungsi memuat data kesanggupan kelompok secara mendetail
         async function muatDataKesanggupan() {
             const container = document.getElementById("containerKesanggupan");
             try {
@@ -71,27 +75,44 @@
                     return;
                 }
 
-                container.innerHTML = ""; // Bersihkan loading state
+                container.innerHTML = ""; // Bersihkan loading
                 
+                // Fungsi pembantu format rupiah singkat tanpa pecahan desimal
+                const Rupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka);
+
                 data.forEach(item => {
-                    // Format angka ke Rupiah agar rapi
-                    const formatTarget = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(item.target_kelompok);
-                    
-                    // Badge warna status
                     const warnaStatus = item.status.toLowerCase() === 'aktif' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
 
                     container.innerHTML += `
-                        <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 flex flex-col items-center justify-center space-y-1">
-                            <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full ${warnaStatus} mb-1">${item.status}</span>
-                            <h4 class="text-lg font-bold text-gray-800">${item.nama_kesanggupan}</h4>
-                            <p class="text-sm text-gray-500">Target Kelompok: <span class="font-semibold text-emerald-600">${formatTarget}</span></p>
+                        <div class="bg-white p-5 rounded-xl shadow-md border border-gray-200 flex flex-col items-center justify-center">
+                            <!-- Status Status Aktif/Selesai -->
+                            <span class="px-3 py-0.5 text-xs font-bold rounded-full ${warnaStatus} mb-2 uppercase">${item.status}</span>
+                            
+                            <!-- Nama Program -->
+                            <h4 class="text-lg font-bold text-gray-800 mb-3">${item.nama_kesanggupan}</h4>
+                            
+                            <!-- Rincian Detail Finansial Rata Tengah -->
+                            <div class="w-full space-y-1 text-sm border-t border-gray-100 pt-2">
+                                <div>
+                                    <span class="text-gray-500">Target Kelompok:</span>
+                                    <div class="font-semibold text-gray-800">${Rupiah(item.target_kelompok)}</div>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Total Terkumpul:</span>
+                                    <div class="font-semibold text-emerald-600">${Rupiah(item.total_terkumpul)}</div>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Sisa Kekurangan:</span>
+                                    <div class="font-semibold text-red-500">${Rupiah(item.sisa_kekurangan)}</div>
+                                </div>
+                            </div>
                         </div>
                     `;
                 });
 
             } catch (error) {
                 console.error(error);
-                container.innerHTML = `<div class="bg-white p-4 rounded-xl shadow-md text-red-500">Gagal memuat data program.</div>`;
+                container.innerHTML = `<div class="bg-white p-4 rounded-xl shadow-md text-red-500">Gagal memuat rincian data keuangan kelompok.</div>`;
             }
         }
 
@@ -99,7 +120,6 @@
         async function prosesLogin() {
             const username = document.getElementById("TextboxUsername").value.trim();
             const pin = document.getElementById("TextboxPIN").value.trim();
-            const notifier = document.getElementById("notifier");
             const btnLogin = document.getElementById("BtnLogin");
 
             if (!username || !pin) {
