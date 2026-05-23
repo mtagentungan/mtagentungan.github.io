@@ -10,58 +10,139 @@
         body { font-family: 'Roboto', sans-serif; }
     </style>
 </head>
-<body class="bg-gray-100 flex flex-col items-center min-h-screen p-4 space-y-6">
+<body class="bg-gray-100 flex flex-col items-center min-h-screen p-4 space-y-5 pb-12">
 
-    <!-- HEADER ADMIN -->
+    <!-- HEADER PANEL ADMIN -->
     <div class="w-full max-w-md flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-200">
         <div>
             <h1 class="text-sm font-bold text-gray-500 uppercase tracking-wider">Panel Kontrol</h1>
-            <p class="text-xs text-gray-400">Selamat Datang, Admin</p>
+            <p class="text-xs text-emerald-600 font-semibold">Role: Bendahara Kelompok</p>
         </div>
-        <button onclick="prosesLogout()" class="text-xs bg-red-50 hover:bg-red-100 text-red-600 font-bold py-1.5 px-3 rounded-lg border border-red-200 transition">
+        <button onclick="prosesLogout()" class="text-xs bg-gray-50 hover:bg-red-50 hover:text-red-600 text-gray-600 font-bold py-1.5 px-3 rounded-lg border border-gray-200 transition">
             LOGOUT
         </button>
     </div>
 
     <!-- SEKSYEN KARTU KESANGGUPAN GLOBAL (RATA TENGAH) -->
     <div class="w-full max-w-md text-center">
-        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Program Penggalangan Dana</h3>
-        <div id="containerKelompokAdmin" class="space-y-4">
-            <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 animate-pulse text-gray-400 text-sm">
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Program Penggalangan Dana</h3>
+        <div id="containerKelompokAdmin" class="space-y-3">
+            <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 animate-pulse text-gray-400 text-xs">
                 Memuat data program kelompok...
             </div>
         </div>
     </div>
 
-    <!-- NOTIFIER JIKA STATUS SELESAI DIKLIK -->
+    <!-- TOMBOL AKSI MANAJEMEN DATA -->
+    <div class="w-full max-w-md grid grid-cols-2 gap-3">
+        <button onclick="bukaForm('modalKesanggupan')" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow-sm transition">
+            ➕ TAMBAH KESANGGUPAN
+        </button>
+        <button onclick="bukaForm('modalAnggota')" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow-sm transition">
+            ➕ TAMBAH ANGGOTA
+        </button>
+    </div>
+
+    <!-- TAMPILAN DAFTAR ANGGOTA (JIKA PROGRAM AKTIF DIKLIK) -->
+    <div id="boxDaftarAnggota" class="hidden w-full max-w-md bg-white rounded-2xl shadow-lg p-5 border border-gray-200">
+        <div class="border-b border-gray-100 pb-3 mb-4 flex justify-between items-center">
+            <div>
+                <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider">Data Lengkap Anggota</h3>
+                <p id="namaProgramTerpilih" class="text-xs text-emerald-600 font-medium mt-0.5"></p>
+            </div>
+            <button onclick="hapusKesanggupan()" class="text-[11px] bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-1 px-2.5 rounded border border-red-200">
+                Hapus Program
+            </button>
+        </div>
+        
+        <!-- List Tempat Card View Anggota Bertumpuk -->
+        <div id="listAnggotaAdmin" class="space-y-4 max-h-96 overflow-y-auto pr-1">
+            <!-- Diisi otomatis melalui JavaScript -->
+        </div>
+    </div>
+
+    <!-- MODAL FORM INPUT NYICIL (POPUP) -->
+    <div id="modalSetorNyicil" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl p-5 max-w-xs w-full shadow-2xl border border-gray-100">
+            <h4 class="text-sm font-bold text-gray-800 border-b pb-2 mb-3">INPUT DATA NYICIL</h4>
+            <p id="namaAnggotaNyicil" class="text-xs text-gray-500 mb-3"></p>
+            <input type="number" id="inputNominalNyicilAdmin" placeholder="Masukkan nominal (Harus Isi)" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm mb-4">
+            <div class="flex space-x-2">
+                <button onclick="simpanNyicilAdmin()" class="flex-1 bg-emerald-600 text-white text-xs font-bold py-2 rounded-md hover:bg-emerald-700">KIRIM</button>
+                <button onclick="tutupForm('modalSetorNyicil')" class="bg-gray-300 text-gray-700 text-xs font-bold py-2 px-3 rounded-md hover:bg-gray-400">BATAL</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FORM TAMBAH KESANGGUPAN -->
+    <div id="modalKesanggupan" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl p-5 max-w-xs w-full shadow-2xl border border-gray-100 space-y-3">
+            <h4 class="text-sm font-bold text-gray-800 border-b pb-2">TAMBAH KESANGGUPAN KELOMPOK</h4>
+            <div>
+                <label class="block text-[11px] font-bold text-gray-500 mb-1">ID KESANGGUPAN:</label>
+                <input type="text" id="addIdKesanggupan" placeholder="Contoh: KSP002" class="w-full px-3 py-1.5 border rounded-lg text-xs focus:ring-2 focus:ring-emerald-500">
+            </div>
+            <div>
+                <label class="block text-[11px] font-bold text-gray-500 mb-1">NAMA KESANGGUPAN:</label>
+                <input type="text" id="addNamaKesanggupan" placeholder="Nama program dana" class="w-full px-3 py-1.5 border rounded-lg text-xs focus:ring-2 focus:ring-emerald-500">
+            </div>
+            <div>
+                <label class="block text-[11px] font-bold text-gray-500 mb-1">TOTAL KESANGGUPAN KELOMPOK:</label>
+                <input type="number" id="addTargetKelompok" placeholder="Target nominal" class="w-full px-3 py-1.5 border rounded-lg text-xs focus:ring-2 focus:ring-emerald-500">
+            </div>
+            <div class="flex space-x-2 pt-2">
+                <button onclick="submitTambahKesanggupan()" class="flex-1 bg-emerald-600 text-white text-xs font-bold py-2 rounded-md">SIMPAN</button>
+                <button onclick="tutupForm('modalKesanggupan')" class="bg-gray-300 text-gray-700 text-xs font-bold py-2 px-3 rounded-md">BATAL</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FORM TAMBAH ANGGOTA -->
+    <div id="modalAnggota" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl p-5 max-w-xs w-full shadow-2xl border border-gray-100 space-y-3">
+            <h4 class="text-sm font-bold text-gray-800 border-b pb-2">TAMBAH ANGGOTA BARU</h4>
+            <div>
+                <label class="block text-[11px] font-bold text-gray-500 mb-1">NAMA ANGGOTA:</label>
+                <input type="text" id="addNamaAnggota" placeholder="Nama lengkap" class="w-full px-3 py-1.5 border rounded-lg text-xs focus:ring-2 focus:ring-emerald-500">
+            </div>
+            <div>
+                <label class="block text-[11px] font-bold text-gray-500 mb-1">NO. WA ANGGOTA:</label>
+                <input type="text" id="addWaAnggota" placeholder="Contoh: 085725xxxxxx" class="w-full px-3 py-1.5 border rounded-lg text-xs focus:ring-2 focus:ring-emerald-500">
+            </div>
+            <div>
+                <label class="block text-[11px] font-bold text-gray-500 mb-1">KESANGGUPAN PRIBADI (Rp):</label>
+                <input type="number" id="addKspPribadi" placeholder="Target masing-masing" class="w-full px-3 py-1.5 border rounded-lg text-xs focus:ring-2 focus:ring-emerald-500">
+            </div>
+            <div class="flex space-x-2 pt-2">
+                <button onclick="submitTambahAnggota()" class="flex-1 bg-emerald-600 text-white text-xs font-bold py-2 rounded-md">SIMPAN</button>
+                <button onclick="tutupForm('modalAnggota')" class="bg-gray-300 text-gray-700 text-xs font-bold py-2 px-3 rounded-md">BATAL</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFIER / POPUP STATUS SELESAI -->
     <div id="popupNotifier" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl p-5 max-w-xs w-full text-center shadow-2xl border border-gray-100">
             <span class="text-3xl">🚫</span>
-            <h4 class="text-md font-bold text-gray-800 mt-2">Program Telah Selesai</h4>
-            <p class="text-xs text-gray-500 mt-1">Kesanggupan ini sudah dinyatakan selesai dan tidak dapat diubah lagi.</p>
-            <button onclick="tutupNotifier()" class="mt-4 w-full bg-gray-800 text-white text-xs font-bold py-2 rounded-lg hover:bg-gray-900">Mengerti</button>
+            <h4 class="text-sm font-bold text-gray-800 mt-2">Program Sudah Selesai</h4>
+            <p class="text-xs text-gray-500 mt-1">Kesanggupan ini sudah selesai.</p>
+            <button onclick="tutupForm('popupNotifier')" class="mt-4 w-full bg-slate-800 text-white text-xs font-bold py-2 rounded-lg hover:bg-slate-900">Mengerti</button>
         </div>
     </div>
 
-    <!-- DAFTAR ANGGOTA (MUNCUL JIKA PROGRAM AKTIF DIKLIK) -->
-    <div id="boxDaftarAnggota" class="hidden w-full max-w-md bg-white rounded-2xl shadow-lg p-5 border border-gray-200">
-        <div class="border-b border-gray-100 pb-3 mb-4">
-            <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider">Data Lengkap Anggota</h3>
-            <p id="namaProgramTerpilih" class="text-xs text-emerald-600 font-medium mt-0.5"></p>
-        </div>
-        
-        <!-- List Anggota Elegan ala CardView -->
-        <div id="listAnggotaAdmin" class="space-y-3 max-h-80 overflow-y-auto pr-1">
-            <!-- Data Terisi Otomatis -->
-        </div>
-    </div>
-
+    <!-- Bersambung ke Bagian 2 (Tag <script>) -->
     <script>
         // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzaScEjzHFGch0m83JKJaSSV64AeS-6ndmhmfFO9DFyQQ3rM9ePQw0Fy2-Vz6cillJh/exec";
+        const WEB_APP_URL = "URL_GOOGLE_APPS_SCRIPT_ANDA_DISINI";
+        
+        let programTerpilihId = "";
+        let programTerpilihNama = "";
+        let anggotaTerpilihId = "";
+        let namaAnggotaTerpilih = "";
 
+        // Proteksi Halaman Admin & Jalankan Otomatis Saat Buka Halaman
         window.onload = function() {
-            // Proteksi Halaman Admin
             const sessionData = sessionStorage.getItem("user_aktif");
             if (!sessionData) {
                 window.location.href = "index.html";
@@ -72,13 +153,12 @@
                 window.location.href = "anggota.html";
                 return;
             }
-
             muatDataKelompokAdmin();
         };
 
         const Rupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka);
 
-        // 1. Ambil data kesanggupan kelompok global
+        // 1. Memuat Card View Ringkasan Kelompok di Atas (Rata Tengah)
         async function muatDataKelompokAdmin() {
             const container = document.getElementById("containerKelompokAdmin");
             try {
@@ -94,8 +174,7 @@
                 data.forEach(item => {
                     const warnaStatus = item.status.toLowerCase() === 'aktif' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
                     
-                    // Membuat elemen card yang bisa diklik
-                    const cardHTML = `
+                    container.innerHTML += `
                         <div onclick="handleCardKlik('${item.id_kesanggupan}', '${item.nama_kesanggupan}', '${item.status}')" 
                              class="bg-white p-5 rounded-xl shadow-md border border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:border-emerald-500 transition duration-200">
                             <span class="px-3 py-0.5 text-[10px] font-bold rounded-full ${warnaStatus} mb-2 uppercase">${item.status}</span>
@@ -106,7 +185,6 @@
                             </div>
                         </div>
                     `;
-                    container.innerHTML += cardHTML;
                 });
             } catch (error) {
                 console.error(error);
@@ -114,45 +192,192 @@
             }
         }
 
-        // 2. Logika ketika Card Program diklik
+        // 2. Logika Penanganan Klik pada Card View Program
         function handleCardKlik(idKsp, namaKsp, status) {
             if (status.toLowerCase() === 'selesai') {
-                document.getElementById("popupNotifier").classList.remove("hidden");
+                bukaForm('popupNotifier');
                 document.getElementById("boxDaftarAnggota").classList.add("hidden");
             } else {
-                document.getElementById("popupNotifier").classList.add("hidden");
+                tutupForm('popupNotifier');
+                programTerpilihId = idKsp;
+                programTerpilihNama = namaKsp;
                 document.getElementById("namaProgramTerpilih").innerText = namaKsp;
                 document.getElementById("boxDaftarAnggota").classList.remove("hidden");
-                
-                // Panggil fungsi tiruan/sementara untuk memuat list anggota (akan dihubungkan ke database di langkah berikutnya)
-                muatDaftarAnggotaPalsu();
+                muatDaftarAnggotaRiil();
             }
         }
 
-        function tutupNotifier() {
-            document.getElementById("popupNotifier").classList.add("hidden");
-        }
-
-        // Fungsi sementara sebelum ditarik dari database sesungguhnya di langkah 2
-        function muatDaftarAnggotaPalsu() {
+        // 3. Menampilkan Daftar Anggota Lengkap Berdasarkan Program yang Dipilih
+        async function muatDaftarAnggotaRiil() {
             const listContainer = document.getElementById("listAnggotaAdmin");
-            listContainer.innerHTML = `
-                <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs text-gray-700 space-y-1 shadow-sm">
-                    <div class="font-bold text-gray-800">WAWAN PRASETYO</div>
-                    <div>📱 WA: 085725xxxxxx</div>
-                    <div>💰 Kesanggupan: ${Rupiah(500000)}</div>
-                    <div class="bg-white p-2 rounded-lg border border-gray-200 mt-2 text-[11px] text-gray-500 space-y-0.5">
-                        <div>👤 Username: <span class="font-mono text-gray-800">maswe</span></div>
-                        <div>🔑 PIN: <span class="font-mono text-gray-800">1234</span></div>
-                    </div>
-                </div>
-            `;
+            listContainer.innerHTML = `<div class="text-xs text-gray-400 text-center py-4">Memuat data anggota...</div>`;
+            
+            try {
+                // Memanggil endpoint khusus admin untuk mengambil seluruh data user & status cicilannya
+                const response = await fetch(`${WEB_APP_URL}?action=get_semua_anggota_admin&id_kesanggupan=${programTerpilihId}`);
+                const anggotaList = await response.json();
+
+                listContainer.innerHTML = "";
+                if (anggotaList.length === 0) {
+                    listContainer.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-2">Belum ada anggota di program ini.</p>`;
+                    return;
+                }
+
+                anggotaList.forEach(agt => {
+                    listContainer.innerHTML += `
+                        <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-2 shadow-sm relative">
+                            <button onclick="hapusAnggota('${agt.id_anggota}', '${agt.nama}')" class="absolute top-3 right-3 text-[10px] bg-red-50 hover:bg-red-100 text-red-600 px-1.5 py-0.5 rounded border border-red-100">
+                                Hapus
+                            </button>
+                            <div class="font-bold text-gray-800 text-sm">${agt.nama}</div>
+                            <div class="text-gray-600 space-y-0.5">
+                                <div>📱 No. WA: <span class="font-medium">${agt.no_wa}</span></div>
+                                <div>💰 Kesanggupan Pribadi: <span class="font-semibold text-gray-800">${Rupiah(agt.kesanggupan_pribadi)}</span></div>
+                            </div>
+                            <div class="bg-white p-2.5 rounded-lg border border-gray-200 text-[11px] text-gray-500 space-y-0.5">
+                                <div>👤 Username: <span class="font-mono text-gray-800">${agt.username}</span></div>
+                                <div>🔑 PIN: <span class="font-mono text-gray-800">${agt.pin}</span></div>
+                            </div>
+                            
+                            <!-- Tombol Aksi untuk Masing-masing Anggota -->
+                            <div class="grid grid-cols-2 gap-2 pt-1">
+                                <button onclick="bukaModalNyicilAdmin('${agt.id_anggota}', '${agt.nama}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 rounded-md transition text-center text-[11px]">
+                                    💰 NYICIL
+                                </button>
+                                <button onclick="kirimWhatsAppTagihan(${JSON.stringify(agt).replace(/"/g, '&quot;')})" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 rounded-md transition text-center text-[11px]">
+                                    📱 KIRIM WA
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                console.error(error);
+                listContainer.innerHTML = `<div class="text-xs text-red-500 text-center py-2">Gagal mengambil data anggota.</div>`;
+            }
+        }
+        // ==========================================
+        // BAGIAN 1: FUNGSI PEMBANTU MODAL & LOGOUT
+        // ==========================================
+
+        // Fungsi membuka modal popup berdasarkan ID elemen
+        function bukaForm(idModal) {
+            const modal = document.getElementById(idModal);
+            if (modal) {
+                modal.classList.remove("hidden");
+            }
         }
 
+        // Fungsi menutup modal popup berdasarkan ID elemen
+        function tutupForm(idModal) {
+            const modal = document.getElementById(idModal);
+            if (modal) {
+                modal.classList.add("hidden");
+            }
+        }
+
+        // Fungsi membersihkan sesi login dan keluar ke halaman utama
         function prosesLogout() {
             sessionStorage.clear();
             window.location.href = "index.html";
         }
-    </script>
-</body>
-</html>
+
+        // ==========================================
+        // BAGIAN 2: LOGIKA INPUT NYICIL (ADMIN)
+        // ==========================================
+
+        // Fungsi memicu munculnya jendela input cicilan untuk anggota tertentu
+        function bukaModalNyicilAdmin(idAnggota, namaAnggota) {
+            anggotaTerpilihId = idAnggota;
+            namaAnggotaTerpilih = namaAnggota;
+            
+            document.getElementById("namaAnggotaNyicil").innerText = "Anggota: " + namaAnggota;
+            document.getElementById("inputNominalNyicilAdmin").value = "";
+            bukaForm("modalSetorNyicil");
+        }
+
+        // Fungsi menyimpan data angsuran (nyicil) baru ke Google Sheets
+        async function simpanNyicilAdmin() {
+            const nominal = document.getElementById("inputNominalNyicilAdmin").value.trim();
+            
+            // Validasi: Input nominal tidak boleh kosong atau minus
+            if (!nominal || parseFloat(nominal) <= 0) {
+                alert("Nominal nyicil harus diisi dengan angka yang valid!");
+                return;
+            }
+
+            if (!confirm(`Setor angsuran untuk ${namaAnggotaTerpilih} sebesar ${Rupiah(nominal)}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: "tambah_nyicil_admin",
+                        id_anggota: anggotaTerpilihId,
+                        id_kesanggupan: programTerpilihId,
+                        nominal: nominal
+                    })
+                });
+
+                const result = await response.json();
+                if (result.status === "success") {
+                    alert("Alhamdulillah, data angsuran berhasil disimpan!");
+                    tutupForm("modalSetorNyicil");
+                    
+                    // Segarkan (refresh) data tampilan di halaman admin
+                    muatDataKelompokAdmin();
+                    muatDaftarAnggotaRiil();
+                } else {
+                    alert("Gagal: " + result.message);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Terjadi kesalahan sistem saat mengirim data.");
+            }
+        }
+
+        // ==========================================
+        // BAGIAN 1: LOGIKA PENYUSUNAN DATA UNTUK KIRIM WA
+        // ==========================================
+
+        // Fungsi awal untuk mengambil riwayat cicilan sebelum menyusun pesan WA
+        async function kirimWhatsAppTagihan(agt) {
+            try {
+                // Ambil data riwayat transaksi cicilan anggota secara real-time
+                const response = await fetch(`${WEB_APP_URL}?action=get_cicilan_anggota&id_anggota=${agt.id_anggota}`);
+                const resData = await response.json();
+                
+                const kspPribadi = parseFloat(agt.kesanggupan_pribadi) || 0;
+                const totalTitip = resData.total_nyicil || 0;
+                const sisa = kspPribadi - totalTitip;
+                
+                // Menyusun teks daftar rincian pembayaran
+                let teksRiwayatWA = "";
+                if (resData.riwayat && resData.riwayat.length > 0) {
+                    resData.riwayat.forEach(row => {
+                        // Bersihkan format tanggal menjadi dd/MM/yy jika panjang
+                        let tglFormat = row.tanggal;
+                        if (tglFormat.includes("/")) {
+                            const part = tglFormat.split("/");
+                            if (part[2] && part[2].length === 4) {
+                                tglFormat = `${part[0]}/${part[1]}/${part[2].substring(2)}`;
+                            }
+                        }
+                        teksRiwayatWA += `${tglFormat} - ${Rupiah(row.nominal)}\n`;
+                    });
+                } else {
+                    teksRiwayatWA = "(Belum ada riwayat pembayaran)\n";
+                }
+
+                // Lanjut ke pemrosesan teks pesan WA di Bagian 2...
+                prosesKirimTeksWA(agt, kspPribadi, totalTitip, sisa, teksRiwayatWA);
+
+            } catch (error) {
+                console.error(error);
+                alert("Gagal menyusun data laporan untuk WhatsApp.");
+            }
+        }
+
+        
