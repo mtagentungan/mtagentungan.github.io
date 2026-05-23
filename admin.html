@@ -157,7 +157,7 @@
         .then(r => r.json())
         .then(res => {
             setLoading(false);
-            selectedUser = { username: username, program: namaProg, namaAsli: res.namaAsli, wa: res.wa, target: res.target, terbayar: res.terbayar, riwayat: res.riwayat };
+            selectedUser = { username: username, program: namaProg, namaAsli: res.namaAsli, wa: res.wa, target: res.target, terbayar: res.terbayar, riwayat: res.riwayat, pin: res.pin };
             document.getElementById("target-nama").innerText = res.namaAsli.toUpperCase();
             document.getElementById("target-info").innerText = `Sisa: Rp ${(res.target - res.terbayar).toLocaleString()}`;
             document.getElementById("modal-aksi").style.display = 'block';
