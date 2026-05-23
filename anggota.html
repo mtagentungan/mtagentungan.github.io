@@ -126,25 +126,30 @@
             listContainer.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-4">Belum ada riwayat angsuran.</p>`;
         } else {
             resData.riwayat.forEach(row => {
-                // Menghapus 2 digit angka tahun depan (misal 2026 -> 26) agar ringkas
-                let tglFormat = row.tanggal;
-                if (tglFormat.includes("/")) {
-                    const part = tglFormat.split("/");
-                    if (part[2] && part[2].length === 4) {
-                        tglFormat = `${part[0]}/${part[1]}/${part[2].substring(2)}`;
-                    }
+                // 1. Ambil teks tanggal mentah lalu bersihkan objek waktunya
+                const objekTanggal = new Date(row.tanggal);
+                
+                // 2. Format tanggal menjadi: selasa, 5 Mei 2026
+                const opsiTanggal = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                let tglFormat = objekTanggal.toLocaleDateString('id-ID', opsiTanggal);
+                
+                // Buat huruf pertama hari menjadi kecil sesuai contoh (misal: "Selasa" -> "selasa")
+                tglFormat = tglFormat.toLowerCase();
+
+                // 3. Ambil teks jam mentah (contoh: "Sat Dec 30 1899 15:52...")
+                const teksJamMentah = row.jam;
+                let jamFormat = "00:00";
+                
+                // Ekstrak bagian jam dan menit (HH:mm) dari teks panjang menggunakan regex
+                const pencocokanJam = teksJamMentah.match(/(\d{2}):(\d{2})/);
+                if (pencocokanJam) {
+                    jamFormat = `${pencocokanJam[1]}:${pencocokanJam[2]}`;
                 }
 
-                // Memastikan jam hanya mengambil Jam:Menit saja (menghilangkan detik jika ada)
-                let jamFormat = row.jam;
-                if (jamFormat.includes(":")) {
-                    const partJam = jamFormat.split(":");
-                    jamFormat = `${partJam[0]}:${partJam[1]}`;
-                }
-
+                // 4. Masukkan ke dalam tampilan HTML
                 listContainer.innerHTML += `
                     <div class="text-xs bg-gray-50 p-2.5 rounded-lg border border-gray-100 flex justify-between text-gray-600 items-center">
-                        <span>📅 ${tglFormat} &nbsp;|&nbsp; 🕒 ${jamFormat}</span>
+                        <span>📅 ${tglFormat} ${jamFormat}</span>
                         <span class="font-bold text-gray-800">${Rupiah(row.nominal)}</span>
                     </div>
                 `;
