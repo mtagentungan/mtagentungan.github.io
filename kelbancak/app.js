@@ -1,4 +1,4 @@
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyr-B5L1qR8yxZPcFQFA42JSAkjnrQfPEtvrZaGveXS5i4w0jfUSqYSXgbHFYMiVwxQ/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzsl3tDsePt6SPKKjKoZI_nvSMHi2HomQtfrmoPeupeNqIKeoR6sjTO8oS4Wr30Cfk/exec";
 
 async function login() {
     const user = document.getElementById("username").value;
