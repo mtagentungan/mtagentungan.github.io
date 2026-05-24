@@ -2,24 +2,46 @@
 <html>
 <head>
   <link rel="stylesheet" href="style.css">
-  <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwMG3puPrN9N9Yi-IV9u1mrUNOAg-bM0Pi4aSSr2_MvfbRUUT3RAY25eaYoCMo7Klw/exec";
-    
-    function login() {
-      // Ambil value dari textboxUsername dan textboxPIN
-      // Panggil google.script.run.processData('LOGIN', data)
-    }
-  </script>
 </head>
 <body>
-  <!-- Halaman Login -->
   <div id="login-page" class="card">
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="pin" placeholder="PIN">
-    <button onclick="login()">LOGIN</button>
+    <h2 class="header">Silakan Login</h2>
+    <input type="text" id="user" placeholder="Username" style="width:100%; margin-bottom:10px;">
+    <input type="password" id="pin" placeholder="PIN" style="width:100%; margin-bottom:10px;">
+    <button class="btn" onclick="login()">LOGIN</button>
   </div>
 
-  <!-- Halaman Admin/Anggota akan dimuat lewat JS setelah login sukses -->
-  <div id="app-container"></div>
+  <div id="admin-page" style="display:none;" class="card">
+    <h2 class="header">Halaman Admin</h2>
+    <div id="list-kesanggupan"></div>
+    <button class="btn" onclick="logout()">LOGOUT</button>
+  </div>
+
+  <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbw0RMBmmgQs7sjNvao6H3KxhVYJlCXUDK21UnKDPWLa8bmQsy20O46afGXFVQsxrmA5/exec";
+
+    function login() {
+      let u = document.getElementById('user').value;
+      let p = document.getElementById('pin').value;
+      
+      fetch(GAS_URL + "?action=LOGIN&user="+u+"&pin="+p)
+      .then(res => res.json())
+      .then(data => {
+        if(data.status === 'success') {
+          sessionStorage.setItem('role', data.role);
+          showPage(data.role);
+        } else {
+          alert('Login Gagal');
+        }
+      });
+    }
+
+    function showPage(role) {
+      document.getElementById('login-page').style.display = 'none';
+      document.getElementById(role + '-page').style.display = 'block';
+    }
+
+    function logout() { location.reload(); }
+  </script>
 </body>
 </html>
