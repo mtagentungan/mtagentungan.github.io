@@ -46,7 +46,14 @@
     </div>
 
     <script>
-        const URL = "https://script.google.com/macros/s/AKfycbzihm5wnw7DbilHX-SV8wXCCje2oEVqmMgl4rahPFHITiPZhi2Ja6GRGPr_A9TeGL36/exec";
+        // Ambil URL dari penyimpanan browser yang sudah diset di index
+const WEB_APP_URL = localStorage.getItem("APP_URL");
+
+// Tambahkan pengaman jika URL belum diset
+if (!WEB_APP_URL) {
+    alert("Konfigurasi aplikasi hilang. Silakan login ulang dari halaman awal.");
+    window.location.href = "index.html";
+}
         window.onload = () => { if(!sessionStorage.getItem("user_aktif")) window.location.href = "index.html"; loadKelompok(); };
 
         async function loadKelompok() {
