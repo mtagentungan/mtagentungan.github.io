@@ -2,88 +2,48 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistem Manajemen Dana</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
+    <title>Login - Dzikra System</title>
 </head>
 <body>
+<div id="loader"><div class="spinner"></div><div style="color:var(--accent);margin-top:15px;letter-spacing:2px;font-size:10px">AUTHENTICATING...</div></div>
 
-    <div id="app">
-        <!-- HALAMAN LOGIN -->
-        <div id="login-page" class="card">
-            <h2 class="header">LOGIN SISTEM</h2>
-            <label>Username</label>
-            <input type="text" id="username" placeholder="Username Anda">
-            <label style="margin-top:15px;">PIN</label>
-            <input type="password" id="pin" placeholder="PIN Anda">
-            <button onclick="handleLogin()" style="margin-top:20px;">LOGIN</button>
-        </div>
-
-        <!-- HALAMAN UTAMA (ADMIN/MEMBER) -->
-        <div id="main-content" style="display:none;">
-            <h2 class="header" id="welcome-msg"></h2>
-            
-            <div id="dashboard-data">
-                <h3 style="color:var(--primary-neon);">Program Kesanggupan</h3>
-                <div id="kesanggupan-list">
-                    <!-- Data akan dimuat disini lewat JS -->
-                </div>
-            </div>
-            
-            <button onclick="logout()" style="background:#ff4757; margin-top:20px;">LOGOUT</button>
-        </div>
+<div class="app-container">
+    <header><h1>DZIKRA SYSTEM</h1></header>
+    <div class="card">
+        <label>SILAKAN MASUKKAN USERNAME DAN PIN</label>
+        <input type="text" id="user" placeholder="Username">
+        <input type="password" id="pin" placeholder="PIN" inputmode="numeric">
+        <button class="btn" onclick="login()">LOGIN SYSTEM</button>
+        <p id="msg" style="text-align:center; font-size:0.8rem; color:#ff4b2b; margin-top:10px"></p>
     </div>
+</div>
 
-    <script>
-        // Fungsi Login
-        function handleLogin() {
-            const user = document.getElementById('username').value;
-            const pin = document.getElementById('pin').value;
-            
-            // Memanggil fungsi di Code.gs (Google Apps Script)
-            google.script.run.withSuccessHandler(function(res) {
-                if(res.status === 'success') {
-                    document.getElementById('login-page').style.display = 'none';
-                    document.getElementById('main-content').style.display = 'block';
-                    document.getElementById('welcome-msg').innerText = 'Assalamu\'alaikum, ' + res.nama;
-                    loadDashboard(); 
-                } else {
-                    alert('Login gagal! Cek kembali username/PIN.');
-                }
-            }).checkLogin(user, pin);
-        }
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyAuohWMZhYVAgDybhFw68BlrM9G-aKRNiGoY8RXIOEWaYuXsm45Kom5n7BMkTPrl6q/exec"; 
+    localStorage.setItem("SCRIPT_URL", SCRIPT_URL);
 
-        // Fungsi Load Data Dashboard
-        function loadDashboard() {
-            google.script.run.withSuccessHandler(function(data) {
-                const container = document.getElementById('kesanggupan-list');
-                container.innerHTML = '';
-                
-                // Asumsi data adalah objek {kesanggupan: [], transaksi: []}
-                data.kesanggupan.slice(1).forEach(k => {
-                    // Hitung total dari transaksi yang ID-nya sama
-                    const totalTerkumpul = data.transaksi.filter(t => t[3] == k[0])
-                                         .reduce((sum, t) => sum + t[2], 0);
-                    
-                    const sisa = k[2] - totalTerkumpul;
-                    
-                    container.innerHTML += `
-                        <div class="card">
-                            <h4>${k[1]}</h4>
-                            <p>Target: Rp ${k[2].toLocaleString()}</p>
-                            <p>Terkumpul: <b>Rp ${totalTerkumpul.toLocaleString()}</b></p>
-                            <p>Kekurangan: Rp ${sisa.toLocaleString()}</p>
-                            <span class="status-badge">${k[3]}</span>
-                        </div>
-                    `;
-                });
-            }).getDashboardData();
-        }
+    function setLoading(show) { document.getElementById("loader").style.display = show ? "flex" : "none"; }
 
-        function logout() {
-            document.getElementById('login-page').style.display = 'block';
-            document.getElementById('main-content').style.display = 'none';
-        }
-    </script>
+    function login() {
+        const u = document.getElementById("user").value;
+        const p = document.getElementById("pin").value;
+        if(!u || !p) return alert("Username dan PIN wajib diisi!");
+        
+        setLoading(true);
+        fetch(SCRIPT_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "login", username: u, pin: p })
+        })
+        .then(r => r.json()).then(res => {
+            setLoading(false);
+            if(res.status == "success") {
+                sessionStorage.setItem("user", JSON.stringify(res));
+                window.location.href = res.role == "admin" ? "admin.html" : "anggota.html";
+            } else { document.getElementById("msg").innerText = res.message; }
+        }).catch(() => { setLoading(false); alert("Koneksi Gagal. Periksa URL Apps Script Anda!"); });
+    }
+</script>
 </body>
 </html>
