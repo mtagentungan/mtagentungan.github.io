@@ -1,38 +1,75 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Selamat Datang</title>
-  <link rel="stylesheet" href="style.css">
-  <style>
-    .hero {
-      text-align: center;
-      margin-top: 20vh;
-      animation: fadeIn 1s ease-in;
-    }
-    .hero h1 {
-      font-size: 32px;
-      color: var(--accent-cyan);
-      text-shadow: 0 0 15px rgba(34, 211, 238, 0.5);
-      margin-bottom: 10px;
-    }
-    .hero p {
-      color: var(--text-secondary);
-      font-size: 16px;
-      margin-bottom: 40px;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sistem Manajemen Dana</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="hero">
-    <h1>Assalamu'alaikum</h1>
-    <p>Selamat datang di Sistem Kesanggupan Kelompok Bancak</p>
-    <button onclick="location.href='login.html'">MASUK APLIKASI</button>
-  </div>
+
+    <!-- CONTAINER UTAMA -->
+    <div id="app">
+
+        <!-- HALAMAN LOGIN -->
+        <div id="login-page" class="card">
+            <h2 class="header">LOGIN SYSTEM</h2>
+            <label>Username</label>
+            <input type="text" id="username" placeholder="Masukan Username">
+            <br><br>
+            <label>PIN</label>
+            <input type="password" id="pin" placeholder="Masukan PIN">
+            <br><br>
+            <button onclick="login()">LOGIN</button>
+        </div>
+
+        <!-- HALAMAN ADMIN (Default disembunyikan) -->
+        <div id="admin-page" class="card" style="display:none;">
+            <h2 class="header">PANEL ADMIN</h2>
+            <div id="admin-content">
+                <!-- List data kesanggupan akan dimuat di sini oleh JS -->
+            </div>
+            <hr>
+            <button onclick="logout()">LOGOUT</button>
+        </div>
+
+        <!-- HALAMAN ANGGOTA (Default disembunyikan) -->
+        <div id="member-page" class="card" style="display:none;">
+            <h2 class="header">DASHBOARD ANGGOTA</h2>
+            <div id="member-content">
+                <!-- Data pribadi anggota dimuat di sini -->
+            </div>
+            <button onclick="logout()">LOGOUT</button>
+        </div>
+
+    </div>
+
+    <script>
+        // FUNGSI NAVIGASI SEDERHANA
+        function showPage(pageId) {
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('admin-page').style.display = 'none';
+            document.getElementById('member-page').style.display = 'none';
+            document.getElementById(pageId).style.display = 'block';
+        }
+
+        // FUNGSI LOGIN (Contoh logika)
+        function login() {
+            const user = document.getElementById('username').value;
+            const pin = document.getElementById('pin').value;
+            
+            // Di sini nanti Anda hubungkan dengan google.script.run
+            // Untuk simulasi, kita arahkan ke admin jika username admin
+            if(user === 'admin') {
+                showPage('admin-page');
+            } else {
+                showPage('member-page');
+            }
+        }
+
+        function logout() {
+            showPage('login-page');
+        }
+    </script>
 </body>
 </html>
