@@ -8,96 +8,81 @@
 </head>
 <body>
 
-    <!-- CONTAINER UTAMA -->
     <div id="app">
-        <!-- Tambahkan ini di bagian mana saja (misalnya sebelum halaman login) -->
-<div id="index-display" class="card">
-    <h2 class="header">PROGRES KESANGGUPAN</h2>
-    <div id="data-list">Loading data...</div>
-</div>
-
-<script>
-    // Memanggil fungsi dari GAS saat halaman dimuat
-    window.onload = function() {
-        google.script.run.withSuccessHandler(renderData).getKesanggupanData();
-    };
-
-    function renderData(data) {
-        let container = document.getElementById('data-list');
-        container.innerHTML = ''; // Kosongkan loading
-
-        data.forEach(row => {
-            // Asumsi kolom: [ID, Nama Kesanggupan, Target, Terkumpul, Status]
-            let html = `
-                <div class="card" style="border-left: 5px solid #00ff9d;">
-                    <h3>${row[1]}</h3> <!-- Nama Kesanggupan -->
-                    <p>Target: Rp ${row[2].toLocaleString()}</p>
-                    <p>Terkumpul: Rp ${row[3].toLocaleString()}</p>
-                </div>
-            `;
-            container.innerHTML += html;
-        });
-    }
-</script>
-
         <!-- HALAMAN LOGIN -->
         <div id="login-page" class="card">
-            <h2 class="header">LOGIN SYSTEM</h2>
+            <h2 class="header">LOGIN SISTEM</h2>
             <label>Username</label>
-            <input type="text" id="username" placeholder="Masukan Username">
-            <br><br>
-            <label>PIN</label>
-            <input type="password" id="pin" placeholder="Masukan PIN">
-            <br><br>
-            <button onclick="login()">LOGIN</button>
+            <input type="text" id="username" placeholder="Username Anda">
+            <label style="margin-top:15px;">PIN</label>
+            <input type="password" id="pin" placeholder="PIN Anda">
+            <button onclick="handleLogin()" style="margin-top:20px;">LOGIN</button>
         </div>
 
-        <!-- HALAMAN ADMIN (Default disembunyikan) -->
-        <div id="admin-page" class="card" style="display:none;">
-            <h2 class="header">PANEL ADMIN</h2>
-            <div id="admin-content">
-                <!-- List data kesanggupan akan dimuat di sini oleh JS -->
+        <!-- HALAMAN UTAMA (ADMIN/MEMBER) -->
+        <div id="main-content" style="display:none;">
+            <h2 class="header" id="welcome-msg"></h2>
+            
+            <div id="dashboard-data">
+                <h3 style="color:var(--primary-neon);">Program Kesanggupan</h3>
+                <div id="kesanggupan-list">
+                    <!-- Data akan dimuat disini lewat JS -->
+                </div>
             </div>
-            <hr>
-            <button onclick="logout()">LOGOUT</button>
+            
+            <button onclick="logout()" style="background:#ff4757; margin-top:20px;">LOGOUT</button>
         </div>
-
-        <!-- HALAMAN ANGGOTA (Default disembunyikan) -->
-        <div id="member-page" class="card" style="display:none;">
-            <h2 class="header">DASHBOARD ANGGOTA</h2>
-            <div id="member-content">
-                <!-- Data pribadi anggota dimuat di sini -->
-            </div>
-            <button onclick="logout()">LOGOUT</button>
-        </div>
-
     </div>
 
     <script>
-        // FUNGSI NAVIGASI SEDERHANA
-        function showPage(pageId) {
-            document.getElementById('login-page').style.display = 'none';
-            document.getElementById('admin-page').style.display = 'none';
-            document.getElementById('member-page').style.display = 'none';
-            document.getElementById(pageId).style.display = 'block';
-        }
-
-        // FUNGSI LOGIN (Contoh logika)
-        function login() {
+        // Fungsi Login
+        function handleLogin() {
             const user = document.getElementById('username').value;
             const pin = document.getElementById('pin').value;
             
-            // Di sini nanti Anda hubungkan dengan google.script.run
-            // Untuk simulasi, kita arahkan ke admin jika username admin
-            if(user === 'admin') {
-                showPage('admin-page');
-            } else {
-                showPage('member-page');
-            }
+            // Memanggil fungsi di Code.gs (Google Apps Script)
+            google.script.run.withSuccessHandler(function(res) {
+                if(res.status === 'success') {
+                    document.getElementById('login-page').style.display = 'none';
+                    document.getElementById('main-content').style.display = 'block';
+                    document.getElementById('welcome-msg').innerText = 'Assalamu\'alaikum, ' + res.nama;
+                    loadDashboard(); 
+                } else {
+                    alert('Login gagal! Cek kembali username/PIN.');
+                }
+            }).checkLogin(user, pin);
+        }
+
+        // Fungsi Load Data Dashboard
+        function loadDashboard() {
+            google.script.run.withSuccessHandler(function(data) {
+                const container = document.getElementById('kesanggupan-list');
+                container.innerHTML = '';
+                
+                // Asumsi data adalah objek {kesanggupan: [], transaksi: []}
+                data.kesanggupan.slice(1).forEach(k => {
+                    // Hitung total dari transaksi yang ID-nya sama
+                    const totalTerkumpul = data.transaksi.filter(t => t[3] == k[0])
+                                         .reduce((sum, t) => sum + t[2], 0);
+                    
+                    const sisa = k[2] - totalTerkumpul;
+                    
+                    container.innerHTML += `
+                        <div class="card">
+                            <h4>${k[1]}</h4>
+                            <p>Target: Rp ${k[2].toLocaleString()}</p>
+                            <p>Terkumpul: <b>Rp ${totalTerkumpul.toLocaleString()}</b></p>
+                            <p>Kekurangan: Rp ${sisa.toLocaleString()}</p>
+                            <span class="status-badge">${k[3]}</span>
+                        </div>
+                    `;
+                });
+            }).getDashboardData();
         }
 
         function logout() {
-            showPage('login-page');
+            document.getElementById('login-page').style.display = 'block';
+            document.getElementById('main-content').style.display = 'none';
         }
     </script>
 </body>
