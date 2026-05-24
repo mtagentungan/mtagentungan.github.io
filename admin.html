@@ -6,7 +6,7 @@
     <title>Admin - Manajemen Kesanggupan</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 flex flex-col items-center min-h-screen p-4 pb-12">
+<body class="bg-gray-100 flex flex-col items-center min-h-screen p-4 pb-12 font-sans">
 
     <!-- HEADER -->
     <div class="w-full max-w-md bg-white p-4 rounded-xl shadow-sm flex justify-between items-center mb-5">
@@ -15,76 +15,60 @@
     </div>
 
     <!-- PROGRAM KELOMPOK -->
-    <div id="containerKelompokAdmin" class="w-full max-w-md space-y-3 mb-5">
-        <div class="text-center text-sm text-gray-500 animate-pulse">Memuat data...</div>
-    </div>
+    <div id="containerKelompokAdmin" class="w-full max-w-md space-y-3 mb-5"></div>
 
-    <!-- TOMBOL AKSI -->
-    <div class="w-full max-w-md grid grid-cols-2 gap-3 mb-6">
-        <button onclick="document.getElementById('modalKesanggupan').classList.remove('hidden')" class="bg-slate-800 text-white font-bold py-2 rounded-xl text-xs">➕ PROGRAM</button>
-        <button onclick="document.getElementById('modalAnggota').classList.remove('hidden')" class="bg-slate-800 text-white font-bold py-2 rounded-xl text-xs">➕ ANGGOTA</button>
-    </div>
-
-    <!-- BOX DAFTAR ANGGOTA -->
+    <!-- BOX ANGGOTA -->
     <div id="boxDaftarAnggota" class="hidden w-full max-w-md bg-white rounded-2xl shadow-lg p-5">
         <h3 id="namaProgramTerpilih" class="text-sm font-bold text-gray-800 uppercase mb-4"></h3>
         <div id="listAnggotaAdmin" class="space-y-4"></div>
     </div>
 
-    <!-- MODALS & SCRIPT -->
-    <div id="modalKesanggupan" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-        <div class="bg-white p-5 rounded-xl w-full max-w-sm">
-            <h4 class="font-bold mb-4">TAMBAH PROGRAM</h4>
-            <input type="text" id="addId" placeholder="ID (KSPxxx)" class="w-full border p-2 mb-2 text-sm rounded">
-            <input type="text" id="addNama" placeholder="Nama Program" class="w-full border p-2 mb-2 text-sm rounded">
-            <input type="number" id="addTarget" placeholder="Target" class="w-full border p-2 mb-4 text-sm rounded">
-            <div class="flex gap-2">
-                <button onclick="submitData('tambah_kesanggupan', {id: document.getElementById('addId').value, nama: document.getElementById('addNama').value, target: document.getElementById('addTarget').value})" class="flex-1 bg-emerald-600 text-white py-2 rounded">SIMPAN</button>
-                <button onclick="document.getElementById('modalKesanggupan').classList.add('hidden')" class="flex-1 bg-gray-300 py-2 rounded">BATAL</button>
-            </div>
-        </div>
-    </div>
-
+    <!-- SCRIPT UTAMA -->
     <script>
-        // Ambil URL dari penyimpanan browser yang sudah diset di index
-const WEB_APP_URL = localStorage.getItem("APP_URL");
+        const URL = localStorage.getItem("APP_URL");
 
-// Tambahkan pengaman jika URL belum diset
-if (!WEB_APP_URL) {
-    alert("Konfigurasi aplikasi hilang. Silakan login ulang dari halaman awal.");
-    window.location.href = "index.html";
-}
-        window.onload = () => { if(!sessionStorage.getItem("user_aktif")) window.location.href = "index.html"; loadKelompok(); };
+        window.onload = () => {
+            if(!sessionStorage.getItem("user_aktif")) window.location.href = "index.html";
+            loadKelompok();
+        };
 
+        const Rupiah = (a) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(a);
+
+        // Load data program
         async function loadKelompok() {
             const res = await fetch(URL);
             const data = await res.json();
-            const container = document.getElementById("containerKelompokAdmin");
-            container.innerHTML = data.map(i => `
-                <div onclick="showAnggota('${i.id_kesanggupan}', '${i.nama_kesanggupan}')" class="bg-white p-4 rounded-xl shadow border cursor-pointer">
-                    <h4 class="font-bold">${i.nama_kesanggupan}</h4>
-                    <p class="text-xs text-gray-500">Terkumpul: ${i.total_terkumpul} / Sisa: ${i.sisa_kekurangan}</p>
+            document.getElementById("containerKelompokAdmin").innerHTML = data.map(i => `
+                <div onclick="showAnggota('${i.id_kesanggupan}', '${i.nama_kesanggupan}')" class="bg-white p-4 rounded-xl shadow border cursor-pointer hover:border-emerald-500 transition">
+                    <h4 class="font-bold text-sm">${i.nama_kesanggupan}</h4>
+                    <p class="text-xs text-gray-500">Terkumpul: ${Rupiah(i.total_terkumpul)} | Sisa: ${Rupiah(i.sisa_kekurangan)}</p>
                 </div>
             `).join('');
         }
 
+        // Tampilkan anggota
         async function showAnggota(id, nama) {
             document.getElementById("boxDaftarAnggota").classList.remove("hidden");
             document.getElementById("namaProgramTerpilih").innerText = nama;
             const res = await fetch(`${URL}?action=get_semua_anggota_admin&id_kesanggupan=${id}`);
             const data = await res.json();
             document.getElementById("listAnggotaAdmin").innerHTML = data.map(a => `
-                <div class="border-b pb-2">
-                    <p class="font-bold text-sm">${a.nama}</p>
-                    <p class="text-xs text-gray-500">Kesanggupan: ${a.kesanggupan_pribadi}</p>
+                <div class="border-b pb-2 flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-sm">${a.nama}</p>
+                        <p class="text-xs text-gray-500">Kesanggupan: ${Rupiah(a.kesanggupan_pribadi)}</p>
+                    </div>
+                    <button onclick="nyicil('${a.id_anggota}', '${a.nama}')" class="bg-emerald-600 text-white text-[10px] font-bold px-3 py-1 rounded">💰 NYICIL</button>
                 </div>
             `).join('');
         }
 
-        async function submitData(act, body) {
-            body.action = act;
-            await fetch(URL, { method: "POST", body: JSON.stringify(body) });
-            alert("Data tersimpan!"); location.reload();
+        // Aksi Nyicil
+        async function nyicil(id, nama) {
+            const nominal = prompt("Masukkan nominal angsuran untuk " + nama + ":");
+            if (!nominal) return;
+            await fetch(URL, { method: "POST", body: JSON.stringify({ action: "tambah_nyicil", id_anggota: id, nominal: nominal }) });
+            alert("Berhasil!"); loadKelompok();
         }
     </script>
 </body>
