@@ -1,57 +1,77 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Penggalangan Dana</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Login - Dzikra System</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div class="app-container">
+  <div class="card" style="max-width:400px;margin:100px auto">
+    <h2 style="text-align:center">LOGIN</h2>
+    <p style="text-align:center;color:var(--text-dim);margin-bottom:20px">
+      Silakan masukkan username dan PIN anda
+    </p>
 
-<div class="header-islami">
-    <h2>Sistem Penggalangan Dana</h2>
-</div>
+    <input type="text" id="username" placeholder="Username" autocomplete="off">
+    <input type="password" id="pin" placeholder="PIN" autocomplete="off">
+    <button class="btn" id="btnLogin" onclick="login()">LOGIN</button>
 
-<div class="card" style="max-width: 400px; margin: 20px auto;">
-    <h3>Login</h3>
-    <p>Silakan masukan username dan PIN anda</p>
-    
-    <label>Username:</label><br>
-    <input type="text" id="username" style="width: 100%; padding: 8px; margin-bottom: 10px;"><br>
-    
-    <label>PIN:</label><br>
-    <input type="password" id="pin" style="width: 100%; padding: 8px; margin-bottom: 20px;"><br>
-    
-    <button onclick="login()" style="width: 100%;">LOGIN</button>
+    <div class="loader" id="loader">Menghubungkan...</div>
+    <div class="error" id="error"></div>
+  </div>
 </div>
 
 <script>
-    // Ganti URL ini dengan URL Web App Google Apps Script Anda
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzsl3tDsePt6SPKKjKoZI_nvSMHi2HomQtfrmoPeupeNqIKeoR6sjTO8oS4Wr30Cfk/exec";
+const SCRIPT_URL = 'PASTE_SCRIPT_URL_ANDA_DI_SINI';
 
-    async function login() {
-        const user = document.getElementById("username").value;
-        const pin = document.getElementById("pin").value;
-        
-        // Simulasi fetch data dari GAS
-        try {
-            const response = await fetch(GAS_URL);
-            const data = await response.json();
-            
-            // Logika pencocokan data (disesuaikan dengan struktur sheets Anda)
-            const userAccount = data.find(item => item.username == user && item.pin == pin);
-            
-            if(userAccount) {
-                localStorage.setItem("user", JSON.stringify(userAccount));
-                window.location.href = userAccount.role === 'admin' ? 'admin.html' : 'anggota.html';
-            } else {
-                alert("Username atau PIN salah!");
-            }
-        } catch (error) {
-            alert("Gagal terhubung ke database. Cek koneksi atau URL GAS.");
-        }
+function login(){
+  const username=document.getElementById('username').value.trim();
+  const pin=document.getElementById('pin').value.trim();
+  const loader=document.getElementById('loader');
+  const error=document.getElementById('error');
+  const btn=document.getElementById('btnLogin');
+
+  if(!username||!pin){
+    error.textContent='Username dan PIN wajib diisi';
+    return;
+  }
+
+  loader.style.display='block';
+  error.textContent='';
+  btn.disabled=true;
+
+  fetch(SCRIPT_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'login',username,pin})
+  })
+ .then(r=>r.json())
+ .then(res=>{
+    loader.style.display='none';
+    btn.disabled=false;
+    if(res.status==='success'){
+      sessionStorage.setItem('user',JSON.stringify(res.user));
+      if(res.user.role==='admin'){
+        window.location.href='admin.html';
+      }else{
+        window.location.href='anggota.html';
+      }
+    }else{
+      error.textContent=res.message;
     }
-</script>
+  })
+ .catch(()=>{
+    loader.style.display='none';
+    btn.disabled=false;
+    error.textContent='Koneksi gagal. Coba lagi.';
+  });
+}
 
+document.addEventListener('keypress',e=>{
+  if(e.key==='Enter')login();
+});
+</script>
 </body>
 </html>
