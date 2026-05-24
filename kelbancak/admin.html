@@ -1,0 +1,23 @@
+<div id="list-kesanggupan"></div>
+
+<script>
+  // Fungsi fetch data untuk Admin
+  async function loadAdminData() {
+    const response = await fetch("https://script.google.com/macros/s/AKfycbzsl3tDsePt6SPKKjKoZI_nvSMHi2HomQtfrmoPeupeNqIKeoR6sjTO8oS4Wr30Cfk/exec");
+    const data = await response.json();
+    
+    const container = document.getElementById("list-kesanggupan");
+    data.kesanggupan.forEach(item => {
+      // Logic: Buat Card per kesanggupan
+      let card = `
+        <div class="card">
+           <h3>${item.namaKesanggupan}</h3>
+           <p>Total: Rp.${item.total}</p>
+           <button onclick="bukaDetail('${item.id}')">Lihat Detail</button>
+           <button onclick="kirimWA('${item.wa}')">Kirim WA</button>
+        </div>
+      `;
+      container.innerHTML += card;
+    });
+  }
+</script>
