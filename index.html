@@ -3,192 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Kesanggupan Kelompok</title>
+    <title>Login Penggalangan Dana</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Roboto', sans-serif; }
-    </style>
+    <style>body { font-family: 'Roboto', sans-serif; }</style>
 </head>
-<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4 space-y-6">
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4">
 
-    <!-- SEKSYEN KARTU KESANGGUPAN (CARD VIEW) RATA TENGAH -->
-    <div class="w-full max-w-sm text-center">
-        <h3 class="text-md font-bold text-gray-700 uppercase tracking-wider mb-3">Program Kesanggupan Dana</h3>
-        
-        <!-- Wadah List Program -->
-        <div id="containerKesanggupan" class="space-y-4">
-            <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 animate-pulse text-gray-400">
-                Memuat rincian program keuangan...
-            </div>
+    <!-- KONFIGURASI URL (ATUR SEKALI DISINI) -->
+    <script>
+        // GANTI URL DI BAWAH INI DENGAN URL WEB APP GAS ANDA
+        localStorage.setItem("APP_URL", "https://script.google.com/macros/s/XXXXXXXXX/exec");
+    </script>
+
+    <!-- CARD KESANGGUPAN -->
+    <div class="w-full max-w-sm text-center mb-6">
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Program Penggalangan Dana</h3>
+        <div id="containerKesanggupan" class="space-y-3">
+            <div class="bg-white p-4 rounded-xl shadow-md text-gray-400 text-xs animate-pulse">Memuat data program...</div>
         </div>
     </div>
 
-    <!-- CARD VIEW LOGIN -->
+    <!-- CARD LOGIN -->
     <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm border border-gray-200">
-        <div class="text-center mb-6">
-            <h2 class="text-xl font-bold text-gray-800">Akses Masuk</h2>
-            <p class="text-sm text-gray-500 mt-1">Silakan masukan username dan PIN anda</p>
-        </div>
+        <h2 class="text-xl font-bold text-gray-800 text-center mb-1">Akses Masuk</h2>
+        <p class="text-sm text-gray-500 text-center mb-6">Silakan masukan username dan PIN anda</p>
 
-        <!-- Form Login -->
         <div class="space-y-4">
-            <div>
-                <label class="block text-sm font-semibold text-gray-600 mb-1">Username</label>
-                <input type="text" id="TextboxUsername" placeholder="Masukkan username" 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
-            </div>
-
-            <div>
-                <label class="block text-sm font-semibold text-gray-600 mb-1">PIN</label>
-                <input type="password" id="TextboxPIN" placeholder="Masukkan PIN" 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
-            </div>
-
-            <button onclick="prosesLogin()" id="BtnLogin"
-                    class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-lg transition duration-200 shadow-md">
-                LOGIN
-            </button>
+            <input type="text" id="TextboxUsername" placeholder="Username" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+            <input type="password" id="TextboxPIN" placeholder="PIN" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+            <button onclick="prosesLogin()" id="BtnLogin" class="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-lg hover:bg-emerald-700 transition">LOGIN</button>
         </div>
-        
-        <!-- Notifier / Pesan Error -->
         <div id="notifier" class="hidden mt-4 p-3 rounded-lg text-sm text-center"></div>
     </div>
 
     <script>
-        // Simpan URL sekali saja di localStorage
-const URL_GAS = "https://script.google.com/macros/s/AKfycbzbeNNZLQfhY9dxEKfLd79NIoPQ6j3tl_POXj2ELZxioH7fHYp6Oaku_KOpqCDHmmw1/exec";
-localStorage.setItem("APP_URL", URL_GAS);
+        const WEB_APP_URL = localStorage.getItem("https://script.google.com/macros/s/AKfycbwizaiyL4RBou7xIfM9jnpFpOOHwGU8GvrCXmFj2a15okODvdvu-PbuH9szdaUNff22/exec");
+        const Rupiah = (a) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(a);
 
-        window.onload = function() {
-            muatDataKesanggupan();
-        };
+        window.onload = muatDataKesanggupan;
 
-        // Fungsi memuat data kesanggupan kelompok secara mendetail
         async function muatDataKesanggupan() {
             const container = document.getElementById("containerKesanggupan");
             try {
-                const response = await fetch(WEB_APP_URL);
-                const data = await response.json();
-
-                if (data.length === 0) {
-                    container.innerHTML = `<div class="bg-white p-4 rounded-xl shadow-md text-gray-500">Belum ada program aktif.</div>`;
-                    return;
-                }
-
-                container.innerHTML = ""; // Bersihkan loading
-                
-                // Fungsi pembantu format rupiah singkat tanpa pecahan desimal
-                const Rupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka);
-
-                data.forEach(item => {
-                    const warnaStatus = item.status.toLowerCase() === 'aktif' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
-
-                    container.innerHTML += `
-                        <div class="bg-white p-5 rounded-xl shadow-md border border-gray-200 flex flex-col items-center justify-center">
-                            <!-- Status Status Aktif/Selesai -->
-                            <span class="px-3 py-0.5 text-xs font-bold rounded-full ${warnaStatus} mb-2 uppercase">${item.status}</span>
-                            
-                            <!-- Nama Program -->
-                            <h4 class="text-lg font-bold text-gray-800 mb-3">${item.nama_kesanggupan}</h4>
-                            
-                            <!-- Rincian Detail Finansial Rata Tengah -->
-                            <div class="w-full space-y-1 text-sm border-t border-gray-100 pt-2">
-                                <div>
-                                    <span class="text-gray-500">Target Kelompok:</span>
-                                    <div class="font-semibold text-gray-800">${Rupiah(item.target_kelompok)}</div>
-                                </div>
-                                <div>
-                                    <span class="text-gray-500">Total Terkumpul:</span>
-                                    <div class="font-semibold text-emerald-600">${Rupiah(item.total_terkumpul)}</div>
-                                </div>
-                                <div>
-                                    <span class="text-gray-500">Sisa Kekurangan:</span>
-                                    <div class="font-semibold text-red-500">${Rupiah(item.sisa_kekurangan)}</div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-
-            } catch (error) {
-                console.error(error);
-                container.innerHTML = `<div class="bg-white p-4 rounded-xl shadow-md text-red-500">Gagal memuat rincian data keuangan kelompok.</div>`;
+                const res = await fetch(WEB_APP_URL);
+                const data = await res.json();
+                container.innerHTML = data.map(item => `
+                    <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200">
+                        <h4 class="font-bold text-gray-800">${item.nama_kesanggupan}</h4>
+                        <div class="text-xs text-gray-500 mt-1">Target: ${Rupiah(item.target_kelompok)} | Terkumpul: ${Rupiah(item.total_terkumpul)}</div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                container.innerHTML = `<div class="p-4 text-red-500 text-xs">Gagal terhubung ke database.</div>`;
             }
         }
 
-        // Fungsi Verifikasi Login
         async function prosesLogin() {
             const username = document.getElementById("TextboxUsername").value.trim();
             const pin = document.getElementById("TextboxPIN").value.trim();
-            const btnLogin = document.getElementById("BtnLogin");
-
-            if (!username || !pin) {
-                tampilkanNotifier("Username dan PIN tidak boleh kosong", "error");
-                return;
-            }
-
-            btnLogin.disabled = true;
-            btnLogin.innerText = "MEMPROSES...";
-            tampilkanNotifier("Menghubungkan...", "info");
-
+            const btn = document.getElementById("BtnLogin");
+            
+            btn.disabled = true; btn.innerText = "MEMPROSES...";
+            
             try {
-                const response = await fetch(WEB_APP_URL, {
+                const res = await fetch(WEB_APP_URL, {
                     method: "POST",
-                    body: JSON.stringify({
-                        action: "login",
-                        username: username,
-                        pin: pin
-                    })
+                    body: JSON.stringify({ action: "login", username, pin })
                 });
-
-                const result = await response.json();
+                const result = await res.json();
 
                 if (result.status === "success") {
-    tampilkanNotifier("Login Sukses! Mengalihkan...", "success");
-    sessionStorage.setItem("user_aktif", JSON.stringify(result.user));
-
-    // Menghindari error akibat perbedaan huruf besar/kecil di Google Sheets (diubah ke huruf kecil semua)
-    const roleUser = result.user.role.toLowerCase().trim();
-
-    setTimeout(() => {
-        if (roleUser === "admin") {
-            window.location.href = "admin.html";
-        } else if (roleUser === "anggota") {
-            window.location.href = "anggota.html";
-        } else {
-            tampilkanNotifier("Role akun tidak dikenali (" + result.user.role + "). Hubungi admin.", "error");
-            btnLogin.disabled = false;
-            btnLogin.innerText = "LOGIN";
-        }
-    }, 1200);
-
-} else {
-                    tampilkanNotifier(result.message, "error");
-                    btnLogin.disabled = false;
-                    btnLogin.innerText = "LOGIN";
+                    sessionStorage.setItem("user_aktif", JSON.stringify(result.user));
+                    window.location.href = result.user.role.toLowerCase() === "admin" ? "admin.html" : "anggota.html";
+                } else {
+                    alert(result.message);
+                    btn.disabled = false; btn.innerText = "LOGIN";
                 }
-
-            } catch (error) {
-                console.error(error);
-                tampilkanNotifier("Gagal terhubung ke database.", "error");
-                btnLogin.disabled = false;
-                btnLogin.innerText = "LOGIN";
+            } catch (e) {
+                alert("Gagal terhubung ke database.");
+                btn.disabled = false; btn.innerText = "LOGIN";
             }
-        }
-
-        function tampilkanNotifier(pesan, tipe) {
-            const notifier = document.getElementById("notifier");
-            notifier.classList.remove("hidden", "bg-red-100", "text-red-700", "bg-green-100", "text-green-700", "bg-blue-100", "text-blue-700");
-            
-            if (tipe === "error") {
-                notifier.classList.add("bg-red-100", "text-red-700");
-            } else if (tipe === "success") {
-                notifier.classList.add("bg-green-100", "text-green-700");
-            } else {
-                notifier.classList.add("bg-blue-100", "text-blue-700");
-            }
-            notifier.innerText = pesan;
         }
     </script>
 </body>
