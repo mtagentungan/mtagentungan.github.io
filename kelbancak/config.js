@@ -1,3 +1,3 @@
 const CONFIG = {
-  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbw2F3av3P5L-J-IiBQ8WRnZMT2EsVLCk_xBRcxkbBMjOd9wUvgsSKpLfkKBJ2bPeF82/exec'
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwRt2ujiVEskNSYkrkzk8ydkJt-_j9t2oxXOmHz1Y_-9Zkf97Y1AOr3dVnJf3YbcGMT/exec'
 }
