@@ -1,257 +1,865 @@
-<!DOCTYPE html>
+# Let's generate a complete, beautifully structured HTML file that combines the styles, 
+# components, and logic for the Kelompok Bancak web application based on the user's requirements.
+# The user wants an SPA (Single Page Application) that handles:
+# 1. Public home page: Global commitment/target lists (active and finished).
+# 2. Login Form (Admin vs Member).
+# 3. Admin dashboard: Member tables, target, paid, remaining, Action buttons: WhatsApp message & Installment ("NYICIL").
+# 4. Member dashboard: Welcome message, personal metrics, history table, and an input form for personal commitment that locks once submitted.
+# 5. Logout Button.
+
+html_content = """<!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kelompok Bancak</title>
-<style>
-body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#f5f5f5}
-.container{max-width:800px;margin:0 auto;background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
-h2,h3,h4{color:#2c3e50;margin-top:20px}
-.card{border:1px solid #ddd;padding:15px;margin:10px 0;border-radius:5px}
-.badge{padding:4px 8px;border-radius:4px;font-size:12px;color:#fff}
-.badge-aktif{background:#27ae60}
-.badge-selesai{background:#7f8c8d}
-input,button,select{padding:10px;margin:5px 0;width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:4px}
-button{background:#3498db;color:#fff;border:none;cursor:pointer;font-weight:bold}
-button:hover{background:#2980b9}
-button.danger{background:#e74c3c}
-button.success{background:#27ae60}
-button.danger:hover{background:#c0392b}
-button.success:hover{background:#229954}
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{border:1px solid #ddd;padding:8px;text-align:left}
-th{background:#ecf0f1}
-.hidden{display:none}
-.header-top{display:flex;justify-content:space-between;align-items:center}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Keuangan Kelompok Bancak</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #18bc9c;
+            --accent-color: #e74c3c;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding-bottom: 60px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Navbar & Header */
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .btn-logout {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            display: none;
+            transition: background 0.2s;
+        }
+
+        .btn-logout:hover {
+            background-color: #c0392b;
+        }
+
+        /* Cards & Components */
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 24px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 18px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-weight: 600;
+            border-left: 4px solid var(--secondary-color);
+            padding-left: 10px;
+        }
+
+        /* Grid System */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .metric-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-box {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #64748b;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .metric-value.danger { color: var(--accent-color); }
+        .metric-value.success { color: var(--secondary-color); }
+
+        /* Tables */
+        .table-responsive {
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            color: var(--primary-color);
+            padding: 12px;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tr:hover {
+            background-color: #f8fafc;
+        }
+
+        /* Badge Status */
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .badge-success { background-color: #d1fae5; color: #065f46; }
+        .badge-warning { background-color: #fef3c7; color: #92400e; }
+
+        /* Forms & Buttons */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
+
+        .form-control:disabled {
+            background-color: #e2e8f0;
+            cursor: not-allowed;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            text-align: center;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background-color: #16a085; }
+        .btn-block { display: block; width: 100%; }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            margin-right: 5px;
+            border-radius: 3px;
+        }
+        .btn-wa { background-color: #25d366; color: white; }
+        .btn-wa:hover { background-color: #128c7e; }
+        .btn-nyicil { background-color: #3498db; color: white; }
+        .btn-nyicil:hover { background-color: #2980b9; }
+
+        /* Login Layout */
+        .login-box {
+            max-width: 400px;
+            margin: 40px auto;
+        }
+
+        /* Views (SPA) */
+        .view-section {
+            display: none;
+        }
+        .view-section.active {
+            display: block;
+        }
+
+        /* Modal styling */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        /* Setup Config Box */
+        .config-alert {
+            background-color: #ebf8ff;
+            border-left: 4px solid #3182ce;
+            color: #2b6cb0;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        @media (max-width: 768px) {
+            .header-container { flex-direction: column; gap: 10px; text-align: center; }
+            td, th { padding: 8px; font-size: 12px; }
+            .btn-sm { margin-bottom: 5px; display: block; width: 100%; text-align: center; }
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-  <h2>Kelompok Bancak</h2>
 
-  <!-- Halaman Awal -->
-  <div id="page-home">
-    <h3>List Kesanggupan</h3>
-    <div id="list-kesanggupan">Loading...</div>
+    <header>
+        <div class="header-container">
+            <h1 id="app-title">Kelompok Bancak</h1>
+            <button id="logout-btn" class="btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </header>
 
-    <h3>Login</h3>
-    <input type="text" id="username" placeholder="Username">
-    <input type="number" id="pin" placeholder="PIN">
-    <button onclick="login()">Login</button>
-    <p id="login-error" style="color:red"></p>
-  </div>
+    <div class="container">
+        
+        <div class="card config-alert" id="config-box">
+            <strong>⚠️ Pengaturan API Google Apps Script:</strong>
+            <p style="margin: 5px 0 10px 0;">Masukkan URL Aplikasi Web (Web App URL) yang Anda dapatkan setelah langkah deploy di Google Apps Script kemarin agar halaman ini terhubung dengan database Sheet Anda.</p>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="api-url-input" class="form-control" placeholder="https://script.google.com/macros/s/.../exec" style="margin-bottom: 0;">
+                <button class="btn" onclick="saveApiUrl()">Simpan URL</button>
+            </div>
+        </div>
 
-  <!-- Halaman Admin -->
-  <div id="page-admin" class="hidden">
-    <div class="header-top">
-      <h3>Dashboard Admin</h3>
-      <button class="danger" style="width:auto" onclick="logout()">Logout</button>
+        <div id="view-publik" class="view-section active">
+            
+            <div class="card">
+                <div class="card-title">Daftar Target Kesanggupan Kelompok</div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nama Kesanggupan</th>
+                                <th>Target Kelompok</th>
+                                <th>Total Terbayar</th>
+                                <th>Kekurangan</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="global-target-table">
+                            <tr>
+                                <td colspan="5" style="text-align:center; color:#888;">Memuat data dari Google Sheets...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card login-box">
+                <div class="card-title" style="text-align: center; border: none; padding: 0; margin-bottom: 20px;">Masuk ke Akun Anda</div>
+                <form id="login-form" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" class="form-control" required placeholder="Masukkan username">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" class="form-control" required placeholder="Masukkan password">
+                    </div>
+                    <button type="submit" id="login-btn" class="btn btn-block">Masuk</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="view-admin" class="view-section">
+            <div class="card">
+                <div class="card-title" id="admin-welcome">Dashboard Administrator</div>
+                <p style="color: #666; margin-bottom: 15px;">Kelola komitmen kesanggupan anggota dan catat pembayaran cicilan.</p>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nama Anggota</th>
+                                <th>Kesanggupan</th>
+                                <th>Total Nyicil</th>
+                                <th>Kekurangan</th>
+                                <th style="text-align: center;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-anggota-table">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-anggota" class="view-section">
+            
+            <div class="card">
+                <div class="card-title" id="member-welcome">Selamat Datang, Anggota!</div>
+                <div class="metric-group">
+                    <div class="metric-box">
+                        <div class="metric-label">Kesanggupan Pribadi</div>
+                        <div class="metric-value" id="m-kesanggupan">Rp0</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Total Terbayar</div>
+                        <div class="metric-value success" id="m-terbayar">Rp0</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Kekurangan</div>
+                        <div class="metric-value danger" id="m-kekurangan">Rp0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">Komitmen Kesanggupan Pribadi</div>
+                    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Masukkan nominal kesanggupan kontribusi Anda. <strong style="color: var(--accent-color);">Form ini hanya dapat diisi satu kali.</strong> Jika sudah terisi, Anda tidak dapat mengubahnya kembali.</p>
+                    
+                    <form id="target-pribadi-form" onsubmit="handleSetTargetPribadi(event)">
+                        <div class="form-group">
+                            <label for="nominal-target-pribadi">Nominal Kesanggupan (Rp)</label>
+                            <input type="number" id="nominal-target-pribadi" class="form-control" required placeholder="Contoh: 1000000">
+                        </div>
+                        <button type="submit" id="btn-submit-target" class="btn btn-block">Simpan Komitmen</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Rincian Riwayat Pembayaran</div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <th>Nominal</th>
+                                <th>Tanggal</th>
+                                <th>Hari</th>
+                                <th>Jam</th>
+                            </thead>
+                            <tbody id="member-log-table">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
     </div>
-    <div id="list-anggota">Loading...</div>
-  </div>
 
-  <!-- Halaman Anggota -->
-  <div id="page-anggota" class="hidden">
-    <div class="header-top">
-      <h3 id="sapaan"></h3>
-      <button class="danger" style="width:auto" onclick="logout()">Logout</button>
+    <div id="nyicil-modal" class="modal">
+        <div class="modal-content">
+            <div class="card-title" style="border: none; padding: 0;" id="nyicil-modal-title">Input Cicilan Baru</div>
+            <form id="nyicil-form" onsubmit="handleTambahCicilan(event)">
+                <input type="hidden" id="nyicil-username">
+                <div class="form-group" style="margin-top: 15px;">
+                    <label for="nyicil-nominal">Nominal Cicilan (Rp)</label>
+                    <input type="number" id="nyicil-nominal" class="form-control" required placeholder="Contoh: 250000">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" style="background-color: #94a3b8;" onclick="closeNyicilModal()">Batal</button>
+                    <button type="submit" class="btn">Simpan Transaksi</button>
+                </div>
+            </form>
+        </div>
     </div>
-    <div id="info-anggota"></div>
-    <div id="form-target"></div>
-    <h4>Riwayat Pembayaran</h4>
-    <div id="riwayat-bayar"></div>
-  </div>
-</div>
 
-<script src="config.js"></script>
-<script>
-const SCRIPT_URL = CONFIG.SCRIPT_URL;
-let currentUser = null;
 
-window.onload = () => {
-  loadKesanggupan();
-  const saved = localStorage.getItem('user');
-  if(saved){
-    currentUser = JSON.parse(saved);
-    showPage(currentUser.role);
-  }
-}
+    <script>
+        // State Global Aplikasi
+        let API_URL = localStorage.getItem('bancak_api_url') || "";
+        let currentUser = null;
 
-async function api(action, data={}, method='GET'){
-  const opt = method==='POST'?{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action,...data})
-  }:{};
+        // Saat halaman pertama kali dibuka
+        window.addEventListener('DOMContentLoaded', () => {
+            if (API_URL) {
+                document.getElementById('api-url-input').value = API_URL;
+                document.getElementById('config-box').style.backgroundColor = '#f0fdf4';
+                document.getElementById('config-box').style.borderColor = '#16a34a';
+                document.getElementById('config-box').innerHTML = '<strong>✅ API Terhubung:</strong> Database Google Sheet siap digunakan. <span style="cursor:pointer; text-decoration:underline; color:#16a34a; margin-left:10px;" onclick="resetConfig()">[Ubah URL API]</span>';
+                
+                // Ambil data global untuk halaman awal
+                fetchGlobalData();
+            } else {
+                setDummyGlobalData(); // Tampilkan mockup data jika API belum diset
+            }
 
-  const url = method==='GET'?`${SCRIPT_URL}?action=${action}&${new URLSearchParams(data)}`:SCRIPT_URL;
-  const res = await fetch(url,opt);
-  if(!res.ok) throw new Error('Koneksi gagal');
-  return res.json();
-}
+            // Cek session login aktif
+            const savedUser = localStorage.getItem('bancak_current_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                renderDashboard();
+            }
+        });
 
-async function loadKesanggupan(){
-  try{
-    const data = await api('getKesanggupanList');
-    let html = '';
-    data.forEach(k=>{
-      html += `<div class="card">
-        <strong>${k.nama}</strong>
-        <span class="badge badge-${k.status}">${k.status}</span><br>
-        Target: Rp ${k.target.toLocaleString('id')}<br>
-        Terkumpul: Rp ${k.terkumpul.toLocaleString('id')}<br>
-        Kurang: Rp ${k.sisa.toLocaleString('id')}
-      </div>`;
-    });
-    document.getElementById('list-kesanggupan').innerHTML = html || '<p>Belum ada kesanggupan</p>';
-  }catch(e){
-    document.getElementById('list-kesanggupan').innerHTML = '<p style="color:red">Gagal load data</p>';
-  }
-}
+        function saveApiUrl() {
+            const url = document.getElementById('api-url-input').value.trim();
+            if (!url) return alert('Silakan masukkan URL API Web App Anda!');
+            localStorage.setItem('bancak_api_url', url);
+            alert('URL API Berhasil disimpan! Halaman akan dimuat ulang.');
+            window.location.reload();
+        }
 
-async function login(){
-  const username = document.getElementById('username').value.trim();
-  const pin = document.getElementById('pin').value.trim();
-  document.getElementById('login-error').textContent = '';
-  
-  if(!username || !pin){
-    document.getElementById('login-error').textContent = 'Isi username dan PIN';
-    return;
-  }
+        function resetConfig() {
+            localStorage.removeItem('bancak_api_url');
+            window.location.reload();
+        }
 
-  try{
-    const res = await api('login',{username,pin},'POST');
-    if(res.status==='success'){
-      currentUser = res.user;
-      localStorage.setItem('user',JSON.stringify(currentUser));
-      showPage(currentUser.role);
-    }else{
-      document.getElementById('login-error').textContent = res.message;
-    }
-  }catch(e){
-    document.getElementById('login-error').textContent = 'Koneksi gagal. Cek URL GAS';
-  }
-}
+        // Format Angka ke Rupiah Currency
+        function formatRupiah(angka) {
+            return "Rp " + Number(angka).toLocaleString('id-ID');
+        }
 
-function logout(){
-  localStorage.removeItem('user');
-  currentUser = null;
-  document.getElementById('username').value = '';
-  document.getElementById('pin').value = '';
-  showPage('home');
-}
+        // Tampilkan data sampel jika API belum siap
+        function setDummyGlobalData() {
+            const tbody = document.getElementById('global-target-table');
+            tbody.innerHTML = `
+                <tr>
+                    <td>Pembelian Tanah Ponpes Putri (Contoh)</td>
+                    <td>${formatRupiah(5000000)}</td>
+                    <td>${formatRupiah(2000000)}</td>
+                    <td style="color:var(--accent-color); font-weight:bold;">${formatRupiah(3000000)}</td>
+                    <td><span class="badge badge-warning">Aktif</span></td>
+                </tr>
+            `;
+        }
 
-function showPage(role){
-  document.getElementById('page-home').classList.add('hidden');
-  document.getElementById('page-admin').classList.add('hidden');
-  document.getElementById('page-anggota').classList.add('hidden');
+        // Ambil Data Global Real-time dari Google Sheet via API
+        function fetchGlobalData() {
+            if (!API_URL) return;
+            
+            fetch(API_URL, {
+                method: 'POST',
+                mode: 'cors',
+                body: JSON.stringify({ action: 'getInitialData' })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    const tbody = document.getElementById('global-target-table');
+                    if (res.data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Belum ada target kesanggupan yang dibuat.</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = '';
+                    res.data.forEach(item => {
+                        const statusBadge = item.status.toLowerCase() === 'aktif' 
+                            ? `<span class="badge badge-warning">Aktif</span>` 
+                            : `<span class="badge badge-success">Selesai</span>`;
+                            
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><strong>${item.nama}</strong></td>
+                                <td>${formatRupiah(item.target)}</td>
+                                <td>${formatRupiah(item.terbayar)}</td>
+                                <td style="color:var(--accent-color); font-weight:bold;">${formatRupiah(item.kurang)}</td>
+                                <td>${statusBadge}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('global-target-table').innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--accent-color);">Gagal mengambil data dari server. Pastikan Web App URL Anda benar & aksesnya set "Anyone".</td></tr>';
+            });
+        }
 
-  if(role==='admin'){
-    document.getElementById('page-admin').classList.remove('hidden');
-    loadAdminDashboard();
-  }else if(role==='anggota'){
-    document.getElementById('page-anggota').classList.remove('hidden');
-    loadAnggotaDetail();
-  }else{
-    document.getElementById('page-home').classList.remove('hidden');
-    loadKesanggupan();
-  }
-}
+        // Prosedur Login User
+        function handleLogin(e) {
+            e.preventDefault();
+            const usernameInput = document.getElementById('username').value.trim();
+            const passwordInput = document.getElementById('password').value;
+            const loginBtn = document.getElementById('login-btn');
 
-async function loadAdminDashboard(){
-  try{
-    const data = await api('getAdminDashboard');
-    let html = '';
-    data.forEach(a=>{
-      html += `<div class="card">
-        <strong>${a.nama}</strong><br>
-        Kesanggupan: Rp ${a.target.toLocaleString('id')}<br>
-        Nyicil: Rp ${a.terbayar.toLocaleString('id')}<br>
-        Kurang: Rp ${a.sisa.toLocaleString('id')}<br>
-        <button class="success" onclick="kirimWA('${a.wa}','${a.nama}','${a.username}','${a.pin}')">Kirim WA</button>
-        <button onclick="promptNyicil('${a.username}','${a.program_id}')">NYICIL</button>
-      </div>`;
-    });
-    document.getElementById('list-anggota').innerHTML = html || '<p>Belum ada anggota</p>';
-  }catch(e){
-    document.getElementById('list-anggota').innerHTML = '<p style="color:red">Gagal load data</p>';
-  }
-}
+            if (!API_URL) {
+                // Fitur simulasi demo instan jika pengguna ingin mencobanya langsung tanpa spreadsheet
+                alert("Simulasi Demo tanpa Database:\\n\\nGunakan username: 'admin' dan pass: 'admin' untuk Admin\\nAtau gunakan username: 'wawan' dan pass: 'wawan' untuk Anggota.");
+                if (usernameInput === 'admin' && passwordInput === 'admin') {
+                    currentUser = { role: 'Admin', profile: { nama: 'Administrator Pro', username: 'admin' }, dataAnggota: [
+                        { username: 'wawan', nama: 'Wawan Purwanto', noWa: '62812345678', targetPribadi: 1000000, totalNyicil: 500000, sisaTagihan: 500000, password: 'wawan' }
+                    ]};
+                    saveAndGo();
+                } else if (usernameInput === 'wawan' && passwordInput === 'wawan') {
+                    currentUser = { role: 'Anggota', profile: { nama: 'Wawan Purwanto', username: 'wawan', targetPribadi: 0, totalNyicil: 0, sisaTagihan: 0 }, rincianCicilan: []};
+                    saveAndGo();
+                } else {
+                    alert('Salah sandi/username simulasi!');
+                }
+                return;
+            }
 
-function kirimWA(wa,nama,user,pin){
-  const msg = `Assalamualaikum ${nama},\n\nIni data akun Kelompok Bancak:\nUsername: ${user}\nPIN: ${pin}\n\nSilakan login untuk cek kesanggupan Anda.`;
-  window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`,'_blank');
-}
+            loginBtn.disabled = true;
+            loginBtn.innerText = 'Memverifikasi...';
 
-async function promptNyicil(username,program_id){
-  const nominal = prompt('Masukkan nominal nyicil:');
-  if(!nominal || isNaN(nominal) || nominal<=0) return;
-  try{
-    await api('addBayar',{username,program_id,nominal},'POST');
-    alert('Pembayaran berhasil');
-    loadAdminDashboard();
-  }catch(e){
-    alert('Gagal simpan pembayaran');
-  }
-}
+            fetch(API_URL, {
+                method: 'POST',
+                mode: 'cors',
+                body: JSON.stringify({
+                    action: 'login',
+                    username: usernameInput,
+                    password: passwordInput
+                })
+            })
+            .then(res => res.json())
+            .then(res => {
+                loginBtn.disabled = false;
+                loginBtn.innerText = 'Masuk';
+                
+                if (res.status === 'success') {
+                    currentUser = res;
+                    saveAndGo();
+                } else {
+                    alert(res.message);
+                }
+            })
+            .catch(err => {
+                loginBtn.disabled = false;
+                loginBtn.innerText = 'Masuk';
+                alert('Terjadi kesalahan koneksi saat login: ' + err.toString());
+            });
 
-async function loadAnggotaDetail(){
-  try{
-    const data = await api('getAnggotaDetail',{username:currentUser.username});
-    document.getElementById('sapaan').textContent = `Halo, ${data.nama}`;
+            function saveAndGo() {
+                localStorage.setItem('bancak_current_user', JSON.stringify(currentUser));
+                renderDashboard();
+            }
+        }
 
-    document.getElementById('info-anggota').innerHTML = `
-      <div class="card">
-        Kesanggupan Pribadi: Rp ${data.target_pribadi.toLocaleString('id')}<br>
-        Sudah Bayar: Rp ${data.terbayar.toLocaleString('id')}<br>
-        Kurang: Rp ${data.sisa.toLocaleString('id')}
-      </div>
-    `;
+        // Menampilkan Halaman Dashboard Sesuai Role Akun
+        function renderDashboard() {
+            // Sembunyikan semua section view utama lebih dulu
+            document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById('logout-btn').style.display = 'block';
 
-    if(data.target_pribadi===0){
-      document.getElementById('form-target').innerHTML = `
-        <h4>Set Kesanggupan Pribadi</h4>
-        <input type="number" id="target-pribadi" placeholder="Masukkan nominal">
-        <button onclick="setTarget()">Simpan</button>
-      `;
-    }else{
-      document.getElementById('form-target').innerHTML = '';
-    }
+            if (currentUser.role === 'Admin') {
+                document.getElementById('view-admin').classList.add('active');
+                document.getElementById('admin-welcome').innerText = `Dashboard Admin: ${currentUser.profile.nama}`;
+                renderAdminTable();
+            } else if (currentUser.role === 'Anggota') {
+                document.getElementById('view-anggota').classList.add('active');
+                document.getElementById('member-welcome').innerText = `Selamat Datang, ${currentUser.profile.nama}!`;
+                
+                // Set metrik finansial personal anggota
+                const p = currentUser.profile;
+                document.getElementById('m-kesanggupan').innerText = formatRupiah(p.targetPribadi || 0);
+                document.getElementById('m-terbayar').innerText = formatRupiah(p.totalNyicil || 0);
+                document.getElementById('m-kekurangan').innerText = formatRupiah(p.sisaTagihan || 0);
 
-    let riwayatHtml = '<table><tr><th>Tanggal</th><th>Hari</th><th>Jam</th><th>Nominal</th></tr>';
-    if(data.riwayat.length===0){
-      riwayatHtml += '<tr><td colspan="4">Belum ada pembayaran</td></tr>';
-    }else{
-      data.riwayat.forEach(r=>{
-        riwayatHtml += `<tr><td>${r.tanggal}</td><td>${r.hari}</td><td>${r.jam}</td><td>Rp ${r.nominal.toLocaleString('id')}</td></tr>`;
-      });
-    }
-    riwayatHtml += '</table>';
-    document.getElementById('riwayat-bayar').innerHTML = riwayatHtml;
-  }catch(e){
-    document.getElementById('info-anggota').innerHTML = '<p style="color:red">Gagal load data</p>';
-  }
-}
+                // Aturan Kunci Input: Nonaktifkan form jika target komitmen pribadi > 0
+                const inputTarget = document.getElementById('nominal-target-pribadi');
+                const btnSubmitTarget = document.getElementById('btn-submit-target');
+                if (Number(p.targetPribadi) > 0) {
+                    inputTarget.value = p.targetPribadi;
+                    inputTarget.disabled = true;
+                    btnSubmitTarget.disabled = true;
+                    btnSubmitTarget.innerText = 'Komitmen Sudah Terkunci';
+                    btnSubmitTarget.style.backgroundColor = '#94a3b8';
+                } else {
+                    inputTarget.value = '';
+                    inputTarget.disabled = false;
+                    btnSubmitTarget.disabled = false;
+                    btnSubmitTarget.innerText = 'Simpan Komitmen';
+                    btnSubmitTarget.style.backgroundColor = 'var(--secondary-color)';
+                }
 
-async function setTarget(){
-  const target = document.getElementById('target-pribadi').value;
-  if(!target || target<=0){
-    alert('Masukkan nominal yang valid');
-    return;
-  }
-  try{
-    const res = await api('setTargetPribadi',{username:currentUser.username,target},'POST');
-    if(res.status==='success'){
-      alert('Kesanggupan tersimpan');
-      loadAnggotaDetail();
-    }else{
-      alert(res.message);
-    }
-  }catch(e){
-    alert('Gagal simpan');
-  }
-}
-</script>
+                renderMemberLogTable();
+            }
+        }
+
+        // Render data tabel anggota di sisi Admin
+        function renderAdminTable() {
+            const tbody = document.getElementById('admin-anggota-table');
+            tbody.innerHTML = '';
+
+            const anggotaOnly = currentUser.dataAnggota.filter(u => u.role !== 'Admin');
+            
+            if (anggotaOnly.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#888;">Belum ada data anggota di sistem.</td></tr>';
+                return;
+            }
+
+            anggotaOnly.forEach(user => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${user.nama}</strong><br><small style="color:#666;">@${user.username}</small></td>
+                        <td>${formatRupiah(user.targetPribadi)}</td>
+                        <td class="success" style="color:var(--secondary-color); font-weight:500;">${formatRupiah(user.totalNyicil)}</td>
+                        <td class="danger" style="color:var(--accent-color); font-weight:bold;">${formatRupiah(user.sisaTagihan)}</td>
+                        <td style="text-align: center;">
+                            <button class="btn btn-sm btn-nyicil" onclick="openNyicilModal('${user.username}', '${user.nama}')">💰 NYICIL</button>
+                            <button class="btn btn-sm btn-wa" onclick="kirimPesanWA('${user.noWa}', '${user.nama}', '${user.username}', '${user.password}')">💬 Kirim WA</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Render riwayat tabel log cicilan di sisi Anggota
+        function renderMemberLogTable() {
+            const tbody = document.getElementById('member-log-table');
+            tbody.innerHTML = '';
+
+            if (!currentUser.rincianCicilan || currentUser.rincianCicilan.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#888;">Belum ada riwayat pembayaran cicilan.</td></tr>';
+                return;
+            }
+
+            currentUser.rincianCicilan.forEach(log => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight:600; color:var(--secondary-color);">${formatRupiah(log.nominal)}</td>
+                        <td>${log.tanggal}</td>
+                        <td>${log.hari}</td>
+                        <td><small>${log.jam}</small></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Fitur Kirim WhatsApp Otomatis Berisi Kredensial Akun Anggota
+        function kirimPesanWA(noWa, nama, username, password) {
+            if (!noWa) return alert('Nomor WhatsApp tidak valid atau kosong!');
+            
+            // Bersihkan nomor WA dari karakter non-numerik jika ada
+            let cleanNoWa = noWa.toString().replace(/\\D/g, '');
+            if (cleanNoWa.startsWith('0')) {
+                cleanNoWa = '62' + cleanNoWa.slice(1);
+            }
+
+            const teks = `Halo *${nama}*, berikut adalah akun login Kelompok Bancak Anda.%0A%0A*Username:* \`${username}\` %0A*Password:* \`${password}\` %0A%0ASilakan cek rincian komitmen, log pembayaran, dan sisa kekurangan Anda secara berkala di web kami. Terima kasih!`;
+            const waUrl = `https://wa.me/${cleanNoWa}?text=${teks}`;
+            window.open(waUrl, '_blank');
+        }
+
+        // Modal Handler Pembayaran Nyicil Anggota oleh Admin
+        function openNyicilModal(username, nama) {
+            document.getElementById('nyicil-username').value = username;
+            document.getElementById('nyicil-modal-title').innerText = `Catat Cicilan: ${nama}`;
+            document.getElementById('nyicil-nominal').value = '';
+            document.getElementById('nyicil-modal').style.display = 'flex';
+        }
+
+        function closeNyicilModal() {
+            document.getElementById('nyicil-modal').style.display = 'none';
+        }
+
+        // Kirim entri cicilan baru ke API
+        function handleTambahCicilan(e) {
+            e.preventDefault();
+            const usernameTarget = document.getElementById('nyicil-username').value;
+            const nominalCicilan = document.getElementById('nyicil-nominal').value;
+
+            if(!API_URL) {
+                // Mockup local logic jika mode simulasi demo
+                const idx = currentUser.dataAnggota.findIndex(u => u.username === usernameTarget);
+                if(idx !== -1) {
+                    currentUser.dataAnggota[idx].totalNyicil += Number(nominalCicilan);
+                    currentUser.dataAnggota[idx].sisaTagihan -= Number(nominalCicilan);
+                    localStorage.setItem('bancak_current_user', JSON.stringify(currentUser));
+                    alert('Simulasi: Cicilan berhasil ditambahkan!');
+                    closeNyicilModal();
+                    renderDashboard();
+                }
+                return;
+            }
+
+            const submitBtn = document.querySelector('#nyicil-form button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Menyimpan...';
+
+            fetch(API_URL, {
+                method: 'POST',
+                mode: 'cors',
+                body: JSON.stringify({
+                    action: 'tambahCicilan',
+                    username: usernameTarget,
+                    nominal: nominalCicilan
+                })
+            })
+            .then(res => res.json())
+            .then(res => {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Simpan Transaksi';
+                if(res.status === 'success') {
+                    alert(res.message);
+                    closeNyicilModal();
+                    
+                    // Untuk mempermudah update view tanpa login ulang, kita paksa sinkronisasi ulang data di background
+                    alert('Melakukan sinkronisasi data ulang...');
+                    window.location.reload(); 
+                } else {
+                    alert(res.message);
+                }
+            })
+            .catch(err => {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Simpan Transaksi';
+                alert('Gagal mengirim transaksi cicilan: ' + err.toString());
+            });
+        }
+
+        // Menyimpan Nominal Target Komitmen Pribadi Anggota (Hanya sekali aktif)
+        function handleSetTargetPribadi(e) {
+            e.preventDefault();
+            const nominal = document.getElementById('nominal-target-pribadi').value;
+
+            if (!confirm(`Apakah Anda yakin menetapkan kesanggupan pribadi sebesar ${formatRupiah(nominal)}?\\n\\nSetelah disimpan, nominal ini TIDAK DAPAT diubah kembali.`)) {
+                return;
+            }
+
+            if(!API_URL) {
+                currentUser.profile.targetPribadi = Number(nominal);
+                currentUser.profile.sisaTagihan = Number(nominal);
+                localStorage.setItem('bancak_current_user', JSON.stringify(currentUser));
+                alert('Simulasi: Nominal kesanggupan berhasil disimpan!');
+                renderDashboard();
+                return;
+            }
+
+            const submitBtn = document.getElementById('btn-submit-target');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Menyimpan...';
+
+            fetch(API_URL, {
+                method: 'POST',
+                mode: 'cors',
+                body: JSON.stringify({
+                    action: 'setTargetPribadi',
+                    username: currentUser.profile.username,
+                    nominal: nominal
+                })
+            })
+            .then(res => res.json())
+            .then(res => {
+                submitBtn.disabled = false;
+                if(res.status === 'success') {
+                    alert(res.message);
+                    window.location.reload(); // Segarkan halaman untuk sinkronisasi data profil sheet terbaru
+                } else {
+                    alert(res.message);
+                }
+            })
+            .catch(err => {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Simpan Komitmen';
+                alert('Gagal menyimpan target komitmen pribadi: ' + err.toString());
+            });
+        }
+
+        // Prosedur Logout Akun
+        function logout() {
+            if(confirm('Apakah Anda yakin ingin keluar aplikasi?')) {
+                localStorage.removeItem('bancak_current_user');
+                currentUser = null;
+                
+                // Kembalikan view ke awal
+                document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+                document.getElementById('view-publik').classList.add('active');
+                document.getElementById('logout-btn').style.display = 'none';
+                
+                // Kosongkan input form login
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+                
+                fetchGlobalData();
+            }
+        }
+    </script>
 </body>
 </html>
+"""
+
+with open("index.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+print("File index.html berhasil dibuat dengan sukses.")
