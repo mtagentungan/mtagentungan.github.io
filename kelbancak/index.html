@@ -1,13 +1,4 @@
-# Let's generate a complete, beautifully structured HTML file that combines the styles, 
-# components, and logic for the Kelompok Bancak web application based on the user's requirements.
-# The user wants an SPA (Single Page Application) that handles:
-# 1. Public home page: Global commitment/target lists (active and finished).
-# 2. Login Form (Admin vs Member).
-# 3. Admin dashboard: Member tables, target, paid, remaining, Action buttons: WhatsApp message & Installment ("NYICIL").
-# 4. Member dashboard: Welcome message, personal metrics, history table, and an input form for personal commitment that locks once submitted.
-# 5. Logout Button.
-
-html_content = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -857,9 +848,3 @@ html_content = """<!DOCTYPE html>
     </script>
 </body>
 </html>
-"""
-
-with open("index.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
-
-print("File index.html berhasil dibuat dengan sukses.")
