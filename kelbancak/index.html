@@ -389,14 +389,33 @@
                 </div>
 
                 <div class="card">
+                    <div class="card-title">Pengaturan Keamanan Akun</div>
+                    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Anda dapat memperbarui nama pengguna (username) dan kata sandi Anda sendiri di sini.</p>
+                    
+                    <form id="pengaturan-akun-form" onsubmit="handleUpdateProfil(event)">
+                        <div class="form-group">
+                            <label for="akun-username">Username Baru</label>
+                            <input type="text" id="akun-username" class="form-control" required placeholder="Username baru">
+                        </div>
+                        <div class="form-group">
+                            <label for="akun-password">Password Baru</label>
+                            <input type="password" id="akun-password" class="form-control" required placeholder="Password baru">
+                        </div>
+                        <button type="submit" id="btn-submit-akun" class="btn btn-block" style="background-color: #34495e;">Simpan Perubahan Akun</button>
+                    </form>
+                </div>
+
+                <div class="card" style="grid-column: span 2;">
                     <div class="card-title">Rincian Riwayat Pembayaran</div>
                     <div class="table-responsive">
                         <table>
                             <thead>
-                                <th>Nominal</th>
-                                <th>Tanggal</th>
-                                <th>Hari</th>
-                                <th>Jam</th>
+                                <tr>
+                                    <th>Nominal</th>
+                                    <th>Tanggal</th>
+                                    <th>Hari</th>
+                                    <th>Jam</th>
+                                </tr>
                             </thead>
                             <tbody id="member-log-table">
                                 </tbody>
@@ -431,13 +450,12 @@
         // =========================================================================
         // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI BAWAH INI:
         // =========================================================================
-        const API_URL = "https://script.google.com/macros/s/AKfycbxAUVwiCG1GSIZiFQRXqwSosmJ0EnGYGW2Nsmo-Kbo_pJdIdTGRRVI6ncXscRTRI79yWA/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbzD1qydINpLvQwZ4m0lA_f0pCvpYPV2Ns0trFZHz5bzfJvlN_jMV_ixLJaTlXtYrZRjYA/exec";
         
         let currentUser = null;
 
         // Saat halaman pertama kali dibuka
         window.addEventListener('DOMContentLoaded', () => {
-            // Langsung ambil data global dari Google Sheets sejak halaman dimuat
             fetchGlobalData();
 
             // Cek session login aktif
@@ -448,12 +466,10 @@
             }
         });
 
-        // Format Angka ke Rupiah Currency
         function formatRupiah(angka) {
             return "Rp " + Number(angka).toLocaleString('id-ID');
         }
 
-        // Ambil Data Global Real-time dari Google Sheet via API
         function fetchGlobalData() {
             if (API_URL.startsWith("PASTIKAN_PASTE")) {
                 document.getElementById('global-target-table').innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--accent-color);">Harap masukkan URL Google Apps Script terlebih dahulu di dalam kode script HTML Anda!</td></tr>';
@@ -493,11 +509,10 @@
             })
             .catch(err => {
                 console.error(err);
-                document.getElementById('global-target-table').innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--accent-color);">Gagal mengambil data dari server. Pastikan Web App URL Anda benar & aksesnya set "Anyone".</td></tr>';
+                document.getElementById('global-target-table').innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--accent-color);">Gagal mengambil data dari server. Pastikan Web App URL Anda benar.</td></tr>';
             });
         }
 
-        // Prosedur Login User
         function handleLogin(e) {
             e.preventDefault();
             const usernameInput = document.getElementById('username').value.trim();
@@ -528,6 +543,10 @@
                 
                 if (res.status === 'success') {
                     currentUser = res;
+                    // Menyimpan password lama di profil local agar mudah dipanggil saat ganti akun
+                    if (currentUser.role === 'Anggota') {
+                        currentUser.profile.password = passwordInput;
+                    }
                     localStorage.setItem('bancak_current_user', JSON.stringify(currentUser));
                     renderDashboard();
                 } else {
@@ -541,9 +560,7 @@
             });
         }
 
-        // Menampilkan Halaman Dashboard Sesuai Role Akun
         function renderDashboard() {
-            // Sembunyikan semua section view utama lebih dulu
             document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
             document.getElementById('logout-btn').style.display = 'block';
 
@@ -555,13 +572,15 @@
                 document.getElementById('view-anggota').classList.add('active');
                 document.getElementById('member-welcome').innerText = `Selamat Datang, ${currentUser.profile.nama}!`;
                 
-                // Set metrik finansial personal anggota
                 const p = currentUser.profile;
                 document.getElementById('m-kesanggupan').innerText = formatRupiah(p.targetPribadi || 0);
                 document.getElementById('m-terbayar').innerText = formatRupiah(p.totalNyicil || 0);
                 document.getElementById('m-kekurangan').innerText = formatRupiah(p.sisaTagihan || 0);
 
-                // Aturan Kunci Input: Nonaktifkan form jika target komitmen pribadi > 0
+                // Taruh nilai profil saat ini ke dalam form pengaturan akun
+                document.getElementById('akun-username').value = p.username;
+                document.getElementById('akun-password').value = p.password || '';
+
                 const inputTarget = document.getElementById('nominal-target-pribadi');
                 const btnSubmitTarget = document.getElementById('btn-submit-target');
                 if (Number(p.targetPribadi) > 0) {
@@ -582,7 +601,6 @@
             }
         }
 
-        // Render data tabel anggota di sisi Admin
         function renderAdminTable() {
             const tbody = document.getElementById('admin-anggota-table');
             tbody.innerHTML = '';
@@ -610,7 +628,6 @@
             });
         }
 
-        // Render riwayat tabel log cicilan di sisi Anggota
         function renderMemberLogTable() {
             const tbody = document.getElementById('member-log-table');
             tbody.innerHTML = '';
@@ -632,7 +649,6 @@
             });
         }
 
-        // Fitur Kirim WhatsApp Otomatis Berisi Kredensial Akun Anggota
         function kirimPesanWA(noWa, nama, username, password) {
             if (!noWa) return alert('Nomor WhatsApp tidak valid atau kosong!');
             
@@ -646,7 +662,6 @@
             window.open(waUrl, '_blank');
         }
 
-        // Modal Handler Pembayaran Nyicil Anggota oleh Admin
         function openNyicilModal(username, nama) {
             document.getElementById('nyicil-username').value = username;
             document.getElementById('nyicil-modal-title').innerText = `Catat Cicilan: ${nama}`;
@@ -658,7 +673,6 @@
             document.getElementById('nyicil-modal').style.display = 'none';
         }
 
-        // Kirim entri cicilan baru ke API
         function handleTambahCicilan(e) {
             e.preventDefault();
             const usernameTarget = document.getElementById('nyicil-username').value;
@@ -696,7 +710,6 @@
             });
         }
 
-        // Menyimpan Nominal Target Komitmen Pribadi Anggota (Hanya sekali aktif)
         function handleSetTargetPribadi(e) {
             e.preventDefault();
             const nominal = document.getElementById('nominal-target-pribadi').value;
@@ -735,7 +748,50 @@
             });
         }
 
-        // Prosedur Logout Akun
+        // BARU: Fungsi untuk mengirim perubahan data Akun ke API Google Sheet
+        function handleUpdateProfil(e) {
+            e.preventDefault();
+            const usernameBaru = document.getElementById('akun-username').value.trim();
+            const passwordBaru = document.getElementById('akun-password').value;
+
+            if (!confirm('Apakah Anda yakin ingin mengubah kredensial masuk akun Anda?\n\nSetelah berhasil, sistem akan otomatis mengeluarkan Anda untuk login ulang.')) {
+                return;
+            }
+
+            const submitBtn = document.getElementById('btn-submit-akun');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Memperbarui Akun...';
+
+            fetch(API_URL, {
+                method: 'POST',
+                mode: 'cors',
+                body: JSON.stringify({
+                    action: 'updateProfil',
+                    usernameLama: currentUser.profile.username,
+                    usernameBaru: usernameBaru,
+                    passwordBaru: passwordBaru
+                })
+            })
+            .then(res => res.json())
+            .then(res => {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Simpan Perubahan Akun';
+                if (res.status === 'success') {
+                    alert(res.message);
+                    // Hapus session dan paksa logout agar pengguna melakukan login ulang dengan kredensial baru
+                    localStorage.removeItem('bancak_current_user');
+                    window.location.reload();
+                } else {
+                    alert(res.message);
+                }
+            })
+            .catch(err => {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Simpan Perubahan Akun';
+                alert('Gagal memperbarui profil: ' + err.toString());
+            });
+        }
+
         function logout() {
             if(confirm('Apakah Anda yakin ingin keluar aplikasi?')) {
                 localStorage.removeItem('bancak_current_user');
