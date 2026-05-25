@@ -16,6 +16,7 @@
         }
 
         * {
+            box-shadow: none;
             box-sizing: border-box;
             margin: 0;
             padding: 0;
@@ -272,17 +273,6 @@
             margin-top: 20px;
         }
 
-        /* Setup Config Box */
-        .config-alert {
-            background-color: #ebf8ff;
-            border-left: 4px solid #3182ce;
-            color: #2b6cb0;
-            padding: 12px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-            font-size: 13px;
-        }
-
         @media (max-width: 768px) {
             .header-container { flex-direction: column; gap: 10px; text-align: center; }
             td, th { padding: 8px; font-size: 12px; }
@@ -300,15 +290,6 @@
     </header>
 
     <div class="container">
-        
-        <div class="card config-alert" id="config-box">
-            <strong>⚠️ Pengaturan API Google Apps Script:</strong>
-            <p style="margin: 5px 0 10px 0;">Masukkan URL Aplikasi Web (Web App URL) yang Anda dapatkan setelah langkah deploy di Google Apps Script kemarin agar halaman ini terhubung dengan database Sheet Anda.</p>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="api-url-input" class="form-control" placeholder="https://script.google.com/macros/s/.../exec" style="margin-bottom: 0;">
-                <button class="btn" onclick="saveApiUrl()">Simpan URL</button>
-            </div>
-        </div>
 
         <div id="view-publik" class="view-section active">
             
@@ -447,23 +428,17 @@
 
 
     <script>
-        // State Global Aplikasi
-        let API_URL = localStorage.getItem('bancak_api_url') || "";
+        // =========================================================================
+        // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI BAWAH INI:
+        // =========================================================================
+        const API_URL = "https://script.google.com/macros/s/AKfycbxAUVwiCG1GSIZiFQRXqwSosmJ0EnGYGW2Nsmo-Kbo_pJdIdTGRRVI6ncXscRTRI79yWA/exec";
+        
         let currentUser = null;
 
         // Saat halaman pertama kali dibuka
         window.addEventListener('DOMContentLoaded', () => {
-            if (API_URL) {
-                document.getElementById('api-url-input').value = API_URL;
-                document.getElementById('config-box').style.backgroundColor = '#f0fdf4';
-                document.getElementById('config-box').style.borderColor = '#16a34a';
-                document.getElementById('config-box').innerHTML = '<strong>✅ API Terhubung:</strong> Database Google Sheet siap digunakan. <span style="cursor:pointer; text-decoration:underline; color:#16a34a; margin-left:10px;" onclick="resetConfig()">[Ubah URL API]</span>';
-                
-                // Ambil data global untuk halaman awal
-                fetchGlobalData();
-            } else {
-                setDummyGlobalData(); // Tampilkan mockup data jika API belum diset
-            }
+            // Langsung ambil data global dari Google Sheets sejak halaman dimuat
+            fetchGlobalData();
 
             // Cek session login aktif
             const savedUser = localStorage.getItem('bancak_current_user');
@@ -473,41 +448,17 @@
             }
         });
 
-        function saveApiUrl() {
-            const url = document.getElementById('api-url-input').value.trim();
-            if (!url) return alert('Silakan masukkan URL API Web App Anda!');
-            localStorage.setItem('bancak_api_url', url);
-            alert('URL API Berhasil disimpan! Halaman akan dimuat ulang.');
-            window.location.reload();
-        }
-
-        function resetConfig() {
-            localStorage.removeItem('bancak_api_url');
-            window.location.reload();
-        }
-
         // Format Angka ke Rupiah Currency
         function formatRupiah(angka) {
             return "Rp " + Number(angka).toLocaleString('id-ID');
         }
 
-        // Tampilkan data sampel jika API belum siap
-        function setDummyGlobalData() {
-            const tbody = document.getElementById('global-target-table');
-            tbody.innerHTML = `
-                <tr>
-                    <td>Pembelian Tanah Ponpes Putri (Contoh)</td>
-                    <td>${formatRupiah(5000000)}</td>
-                    <td>${formatRupiah(2000000)}</td>
-                    <td style="color:var(--accent-color); font-weight:bold;">${formatRupiah(3000000)}</td>
-                    <td><span class="badge badge-warning">Aktif</span></td>
-                </tr>
-            `;
-        }
-
         // Ambil Data Global Real-time dari Google Sheet via API
         function fetchGlobalData() {
-            if (!API_URL) return;
+            if (API_URL.startsWith("PASTIKAN_PASTE")) {
+                document.getElementById('global-target-table').innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--accent-color);">Harap masukkan URL Google Apps Script terlebih dahulu di dalam kode script HTML Anda!</td></tr>';
+                return;
+            }
             
             fetch(API_URL, {
                 method: 'POST',
@@ -553,20 +504,8 @@
             const passwordInput = document.getElementById('password').value;
             const loginBtn = document.getElementById('login-btn');
 
-            if (!API_URL) {
-                // Fitur simulasi demo instan jika pengguna ingin mencobanya langsung tanpa spreadsheet
-                alert("Simulasi Demo tanpa Database:\\n\\nGunakan username: 'admin' dan pass: 'admin' untuk Admin\\nAtau gunakan username: 'wawan' dan pass: 'wawan' untuk Anggota.");
-                if (usernameInput === 'admin' && passwordInput === 'admin') {
-                    currentUser = { role: 'Admin', profile: { nama: 'Administrator Pro', username: 'admin' }, dataAnggota: [
-                        { username: 'wawan', nama: 'Wawan Purwanto', noWa: '62812345678', targetPribadi: 1000000, totalNyicil: 500000, sisaTagihan: 500000, password: 'wawan' }
-                    ]};
-                    saveAndGo();
-                } else if (usernameInput === 'wawan' && passwordInput === 'wawan') {
-                    currentUser = { role: 'Anggota', profile: { nama: 'Wawan Purwanto', username: 'wawan', targetPribadi: 0, totalNyicil: 0, sisaTagihan: 0 }, rincianCicilan: []};
-                    saveAndGo();
-                } else {
-                    alert('Salah sandi/username simulasi!');
-                }
+            if (API_URL.startsWith("PASTIKAN_PASTE")) {
+                alert("Gagal Login. Anda belum memasukkan URL Google Apps Script di dalam kode index.html.");
                 return;
             }
 
@@ -589,7 +528,8 @@
                 
                 if (res.status === 'success') {
                     currentUser = res;
-                    saveAndGo();
+                    localStorage.setItem('bancak_current_user', JSON.stringify(currentUser));
+                    renderDashboard();
                 } else {
                     alert(res.message);
                 }
@@ -599,11 +539,6 @@
                 loginBtn.innerText = 'Masuk';
                 alert('Terjadi kesalahan koneksi saat login: ' + err.toString());
             });
-
-            function saveAndGo() {
-                localStorage.setItem('bancak_current_user', JSON.stringify(currentUser));
-                renderDashboard();
-            }
         }
 
         // Menampilkan Halaman Dashboard Sesuai Role Akun
@@ -701,8 +636,7 @@
         function kirimPesanWA(noWa, nama, username, password) {
             if (!noWa) return alert('Nomor WhatsApp tidak valid atau kosong!');
             
-            // Bersihkan nomor WA dari karakter non-numerik jika ada
-            let cleanNoWa = noWa.toString().replace(/\\D/g, '');
+            let cleanNoWa = noWa.toString().replace(/\D/g, '');
             if (cleanNoWa.startsWith('0')) {
                 cleanNoWa = '62' + cleanNoWa.slice(1);
             }
@@ -730,20 +664,6 @@
             const usernameTarget = document.getElementById('nyicil-username').value;
             const nominalCicilan = document.getElementById('nyicil-nominal').value;
 
-            if(!API_URL) {
-                // Mockup local logic jika mode simulasi demo
-                const idx = currentUser.dataAnggota.findIndex(u => u.username === usernameTarget);
-                if(idx !== -1) {
-                    currentUser.dataAnggota[idx].totalNyicil += Number(nominalCicilan);
-                    currentUser.dataAnggota[idx].sisaTagihan -= Number(nominalCicilan);
-                    localStorage.setItem('bancak_current_user', JSON.stringify(currentUser));
-                    alert('Simulasi: Cicilan berhasil ditambahkan!');
-                    closeNyicilModal();
-                    renderDashboard();
-                }
-                return;
-            }
-
             const submitBtn = document.querySelector('#nyicil-form button[type="submit"]');
             submitBtn.disabled = true;
             submitBtn.innerText = 'Menyimpan...';
@@ -764,9 +684,6 @@
                 if(res.status === 'success') {
                     alert(res.message);
                     closeNyicilModal();
-                    
-                    // Untuk mempermudah update view tanpa login ulang, kita paksa sinkronisasi ulang data di background
-                    alert('Melakukan sinkronisasi data ulang...');
                     window.location.reload(); 
                 } else {
                     alert(res.message);
@@ -784,16 +701,7 @@
             e.preventDefault();
             const nominal = document.getElementById('nominal-target-pribadi').value;
 
-            if (!confirm(`Apakah Anda yakin menetapkan kesanggupan pribadi sebesar ${formatRupiah(nominal)}?\\n\\nSetelah disimpan, nominal ini TIDAK DAPAT diubah kembali.`)) {
-                return;
-            }
-
-            if(!API_URL) {
-                currentUser.profile.targetPribadi = Number(nominal);
-                currentUser.profile.sisaTagihan = Number(nominal);
-                localStorage.setItem('bancak_current_user', JSON.stringify(currentUser));
-                alert('Simulasi: Nominal kesanggupan berhasil disimpan!');
-                renderDashboard();
+            if (!confirm(`Apakah Anda yakin menetapkan kesanggupan pribadi sebesar ${formatRupiah(nominal)}?\n\nSetelah disimpan, nominal ini TIDAK DAPAT diubah kembali.`)) {
                 return;
             }
 
@@ -815,7 +723,7 @@
                 submitBtn.disabled = false;
                 if(res.status === 'success') {
                     alert(res.message);
-                    window.location.reload(); // Segarkan halaman untuk sinkronisasi data profil sheet terbaru
+                    window.location.reload(); 
                 } else {
                     alert(res.message);
                 }
@@ -833,12 +741,10 @@
                 localStorage.removeItem('bancak_current_user');
                 currentUser = null;
                 
-                // Kembalikan view ke awal
                 document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
                 document.getElementById('view-publik').classList.add('active');
                 document.getElementById('logout-btn').style.display = 'none';
                 
-                // Kosongkan input form login
                 document.getElementById('username').value = '';
                 document.getElementById('password').value = '';
                 
