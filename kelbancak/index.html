@@ -272,15 +272,43 @@
             gap: 10px;
             margin-top: 20px;
         }
+        /* Menentukan urutan default (tampilan Desktop) */
+#view-anggota .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
 
+/* Card 1: Komitmen Kesanggupan */
+#view-anggota .grid-2 > div:nth-child(1) { 
+    order: 1; 
+}
+
+/* Card 3: Rincian Riwayat Pembayaran (kita paksa naik ke urutan 2) */
+#view-anggota .grid-2 > div:nth-child(3) { 
+    order: 2; 
+}
+
+/* Card 2: Pengaturan Keamanan Akun (kita turunkan ke urutan 3 paling bawah) */
+#view-anggota .grid-2 > div:nth-child(2) { 
+    order: 3; 
+    grid-column: span 2; /* Di desktop, dia akan melebar penuh di bawah */
+}
+       /* MEDIA QUERY RESPONSIVE MOBILE */
         @media (max-width: 768px) {
             .header-container { flex-direction: column; gap: 10px; text-align: center; }
             td, th { padding: 8px; font-size: 12px; }
             .btn-sm { margin-bottom: 5px; display: block; width: 100%; text-align: center; }
             
-            /* BARU: Memaksa grid halaman anggota menjadi vertikal/1 kolom saat di HP */
+            /* Memaksa grid menjadi 1 kolom vertikal di HP */
             .grid-2 {
                 grid-template-columns: 1fr !important;
+            }
+
+            /* Reset span grid di mobile agar tidak merusak layout */
+            #view-anggota .grid-2 > div:nth-child(2),
+            #view-anggota .grid-2 > div:nth-child(3) {
+                grid-column: span 1 !important;
             }
         }
     </style>
