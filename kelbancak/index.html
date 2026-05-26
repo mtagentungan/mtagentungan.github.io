@@ -222,7 +222,8 @@
 
         .btn:hover { background-color: #16a085; }
         .btn-block { display: block; width: 100%; }
-        
+        .btn-ingatkan {background-color:#f39c12; color: white;}
+        .btn-ingatkan:hover {background-color: #d35400;}
         .btn-sm {
             padding: 6px 12px;
             font-size: 12px;
@@ -483,7 +484,7 @@
         // =========================================================================
         // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI BAWAH INI:
         // =========================================================================
-        const API_URL = "https://script.google.com/macros/s/AKfycbzD1qydINpLvQwZ4m0lA_f0pCvpYPV2Ns0trFZHz5bzfJvlN_jMV_ixLJaTlXtYrZRjYA/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbyBOSPFTuEq8cvAXbTrdQxwfYxDWMhZbY62UD3_yc5YfQZ0BQUABwmDSuKilAYJxb5TCA/exec";
         
         let currentUser = null;
 
@@ -635,31 +636,40 @@
         }
 
         function renderAdminTable() {
-            const tbody = document.getElementById('admin-anggota-table');
-            tbody.innerHTML = '';
+    const tbody = document.getElementById('admin-anggota-table');
+    tbody.innerHTML = '';
 
-            const anggotaOnly = currentUser.dataAnggota.filter(u => u.role !== 'Admin');
-            
-            if (anggotaOnly.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#888;">Belum ada data anggota di sistem.</td></tr>';
-                return;
-            }
+    const anggotaOnly = currentUser.dataAnggota.filter(u => u.role !== 'Admin');
+    
+    if (anggotaOnly.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#888;">Belum ada data anggota di sistem.</td></tr>';
+        return;
+    }
 
-            anggotaOnly.forEach(user => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${user.nama}</strong><br><small style="color:#666;">@${user.username}</small></td>
-                        <td>${formatRupiah(user.targetPribadi)}</td>
-                        <td class="success" style="color:var(--secondary-color); font-weight:500;">${formatRupiah(user.totalNyicil)}</td>
-                        <td class="danger" style="color:var(--accent-color); font-weight:bold;">${formatRupiah(user.sisaTagihan)}</td>
-                        <td style="text-align: center;">
-                            <button class="btn btn-sm btn-nyicil" onclick="openNyicilModal('${user.username}', '${user.nama}')">💰 NYICIL</button>
-                            <button class="btn btn-sm btn-wa" onclick="kirimPesanWA('${user.noWa}', '${user.nama}', '${user.username}', '${user.password}')">💬 Kirim WA</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
+    anggotaOnly.forEach(user => {
+        // Cari nama program/kesanggupan aktif dari data global untuk disisipkan ke pesan
+        // (Default menggunakan "Kelompok Bancak" jika tidak ditemukan)
+        const namaProgram = "Kelompok Bancak"; 
+
+        // Stringifikasi rincian cicilan agar bisa dikirim dengan aman lewat parameter fungsi onclick
+        const rincianJson = encodeURIComponent(JSON.stringify(user.rincianCicilan || []));
+
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>${user.nama}</strong><br><small style="color:#666;">@${user.username}</small></td>
+                <td>${formatRupiah(user.targetPribadi)}</td>
+                <td class="success" style="color:var(--secondary-color); font-weight:500;">${formatRupiah(user.totalNyicil)}</td>
+                <td class="danger" style="color:var(--accent-color); font-weight:bold;">${formatRupiah(user.sisaTagihan)}</td>
+                <td style="text-align: center;">
+                    <button class="btn btn-sm btn-nyicil" onclick="openNyicilModal('${user.username}', '${user.nama}')">💰 NYICIL</button>
+                    <button class="btn btn-sm btn-ingatkan" onclick="kirimPengingatWA('${user.noWa}', '${user.nama}', '${namaProgram}', '${user.username}', '${user.password}', '${user.targetPribadi}', '${user.totalNyicil}', '${user.sisaTagihan}', '${rincianJson}')">🔔 INGATKAN</button>
+                    <button class="btn btn-sm btn-wa" onclick="kirimPesanWA('${user.noWa}', '${user.nama}', '${user.username}', '${user.password}')">💬 Kirim WA</button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
 
         
             function renderMemberLogTable() {
@@ -711,6 +721,54 @@
             const waUrl = `https://wa.me/${cleanNoWa}?text=${teks}`;
             window.open(waUrl, '_blank');
         }
+
+        function kirimPengingatWA(noWa, nama, namaProgram, username, pin, target, terbayar, sisa, rincianJson) {
+    if (!noWa) return alert('Nomor WhatsApp tidak valid atau kosong!');
+    
+    // Bersihkan nomor WhatsApp ke format internasional
+    let cleanNoWa = noWa.toString().replace(/\D/g, '');
+    if (cleanNoWa.startsWith('0')) {
+        cleanNoWa = '62' + cleanNoWa.slice(1);
+    }
+
+    // Tentukan status kekurangan
+    let teksKekurangan = Number(sisa) <= 0 ? "*SELESAI*" : formatRupiah(sisa);
+
+    // Parse data rincian transaksi cicilan
+    let daftarCicilan = [];
+    try {
+        daftarCicilan = JSON.parse(decodeURIComponent(rincianJson));
+    } catch (e) {
+        console.error("Gagal membaca rincian cicilan", e);
+    }
+
+    // Susun baris rincian pembayaran
+    let teksRincianPembayaran = "";
+    if (daftarCicilan.length === 0) {
+        teksRincianPembayaran = "_(Belum ada riwayat pembayaran)_";
+    } else {
+        daftarCicilan.forEach(c => {
+            teksRincianPembayaran += `${c.tanggal} - ${formatRupiah(c.nominal)}\n`;
+        });
+    }
+
+    // Rangkai template pesan sesuai permintaan Anda
+    let pesan = `Assalaamu'alaikum, Mas ${nama}, berikut ini adalah rincian anda untuk kesanggupan _${namaProgram}_ :\n\n`;
+    pesan += `Link: https://mtagentungan.github.io/kelbancak/ \n`;
+    pesan += `Username: ${username} \n`;
+    pesan += `PIN: ${pin} \n`;
+    pesan += `Kesanggupan: ${formatRupiah(target)} \n`;
+    pesan += `Total titip: ${formatRupiah(terbayar)} \n`;
+    pesan += `Kekurangan: ${teksKekurangan} \n\n`;
+    pesan += `Berikut rincian pembayaran: \n`;
+    pesan += `${teksRincianPembayaran}\n`;
+    pesan += `> _Bendahara II Kelompok Bancak_`;
+
+    // Encode teks agar aman bagi URL WhatsApp
+    const urlWa = `https://wa.me/${cleanNoWa}?text=${encodeURIComponent(pesan)}`;
+    window.open(urlWa, '_blank');
+}
+
 
         function openNyicilModal(username, nama) {
             document.getElementById('nyicil-username').value = username;
