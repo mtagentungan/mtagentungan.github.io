@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Database Warga MTA MJG 3</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <title>Database Warga MTA MJG 3 (GAS)</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f8f9fa; color: #333; }
         h2 { color: #2c3e50; text-align: center; margin-bottom: 25px; }
@@ -14,7 +13,7 @@
         .table-responsive { overflow-x: auto; background: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
         th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-        th { background-color: #3498db; color: white; font-weight: 600; }
+        th { background-color: #2ecc71; color: white; font-weight: 600; }
         tr:hover { background-color: #f1f5f9; }
         .loading { text-align: center; font-style: italic; color: #7f8c8d; font-size: 18px; margin-top: 40px; }
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
@@ -30,7 +29,7 @@
         <input type="text" id="searchInput" oninput="searchName()" placeholder="Cari nama warga di sini...">
     </div>
 
-    <div id="loading" class="loading">Memuat data dari Google Sheets...</div>
+    <div id="loading" class="loading">Memuat data secara aman via Google API...</div>
 
     <div class="table-responsive" id="tableWrapper" style="display:none;">
         <table id="wargaTable">
@@ -51,54 +50,24 @@
     </div>
 
     <script>
-        const csvUrl = 'https://docs.google.com/spreadsheets/d/1H2lX5hd2s_gLnTm734OBhxr70SIgD05B9jUfzbBF0-0/pub?gid=497244178&single=true&output=csv';
+        // TEMPELKAN WEB APP URL DARI GOOGLE APPS SCRIPT DI SINI
+        const gasUrl = 'https://script.google.com/macros/s/AKfycbz8JE2Vr0LFF0ykYTJJDiQSm6fCmN83Idjur4Tb3JLf_cfbfSp5GkWhNGLiWWV2hl5ITA/exec';
+        
         let semuaData = [];
 
         async function ambilData() {
             try {
-                // Menggunakan Papa.parse langsung dari URL agar terhindar dari masalah CORS & salah potong koma
-                Papa.parse(csvUrl, {
-                    download: true,
-                    header: false, // Kita mapping manual berdasarkan indeks kolom
-                    complete: function(results) {
-                        const baris = results.data;
-                        
-                        // Dimulai dari indeks ke-2 untuk melewati baris judul atas sheets Anda
-                        for (let i = 2; i < baris.length; i++) {
-                            const kolom = baris[i];
-                            
-                            // Validasi jika baris kosong atau kolom ID (kolom B) kosong
-                            if (!kolom || kolom.length < 3 || !kolom[1]) continue; 
-                            
-                            semuaData.push({
-                                id: kolom[1] || '-',
-                                nama: kolom[2] || '-',
-                                gender: kolom[3] || '-',
-                                status: kolom[4] || '-',
-                                rt: kolom[5] || '-',
-                                tempatLahir: kolom[7] || '-',
-                                noHp: (kolom[17] || '-').replace(/'/g, '') // Menghapus petik satu di nomor HP jika ada
-                            });
-                        }
+                const response = await fetch(gasUrl);
+                semuaData = await response.json();
 
-                        tampilkanData(semuaData);
-                        document.getElementById('loading').style.display = 'none';
-                        document.getElementById('tableWrapper').style.display = 'block';
-                    },
-                    error: function(err) {
-                        console.error('PapaParse Error:', err);
-                        tampilkan ErrorHalaman();
-                    }
-                });
+                tampilkanData(semuaData);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('tableWrapper').style.display = 'block';
 
             } catch (error) {
-                console.error('Fetch Error:', error);
-                tampilkanErrorHalaman();
+                console.error('Gagal memuat data via GAS:', error);
+                document.getElementById('loading').innerText = 'Gagal memuat data. Pastikan konfigurasi Web App di Apps Script Anda sudah diset ke "Anyone".';
             }
-        }
-
-        function tampilkanErrorHalaman() {
-            document.getElementById('loading').innerText = 'Gagal memuat database warga. Pastikan tautan Google Sheets sudah di-Publish ke Web sebagai CSV.';
         }
 
         function tampilkanData(data) {
