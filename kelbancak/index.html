@@ -605,21 +605,22 @@
     } else if (currentUser.role === 'Anggota') {
         document.getElementById('view-anggota').classList.add('active');
         
-        // 1. CARI PROGRAM/TARGET YANG SEDANG AKTIF SECARA DINAMIS
-        let namaProgramAktif = "Kelompok Bancak"; // Jaga-jaga jika data global belum termuat
+        // AMBIL NAMA TARGET LANGSUNG DARI TABEL LOGIN FRONTEND
+        let namaProgramAktif = "Kelompok Bancak"; // Sediakan nama cadangan jika tabel kosong
         
         const tablePublik = document.getElementById('global-target-table');
         if (tablePublik && tablePublik.rows.length > 0) {
             for (let i = 0; i < tablePublik.rows.length; i++) {
-                // Mencari baris yang berstatus 'Aktif' lewat tanda badge-warning
+                // Mencari baris yang mengandung elemen status "Aktif" (badge-warning)
                 if (tablePublik.rows[i].innerHTML.includes('badge-warning') || tablePublik.rows[i].innerHTML.toLowerCase().includes('aktif')) {
+                    // Ambil teks murni dari kolom pertama (Kolom Nama_Target)
                     namaProgramAktif = tablePublik.rows[i].cells[0].innerText.trim();
-                    break;
+                    break; // Berhenti mencari jika sudah ketemu yang aktif
                 }
             }
         }
 
-        // 2. TAMPILKAN SALAM DAN DETAIL TARGET AKTIF
+        // TAMPILKAN SALAM DAN DETAIL TARGET AKTIFNYA
         document.getElementById('member-welcome').innerHTML = `
             Assalaamu'alaikum, mas ${currentUser.profile.nama}!<br>
             <span style="font-size: 14px; font-weight: normal; color: #555; display: inline-block; margin-top: 5px;">
