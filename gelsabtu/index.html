@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Warga MTA MJG 3</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f8f9fa; color: #333; }
+        h2 { color: #2c3e50; text-align: center; margin-bottom: 25px; }
+        .search-container { display: flex; justify-content: center; margin-bottom: 25px; }
+        input[type="text"] { padding: 12px 20px; width: 100%; max-width: 400px; border: 2px solid #cbd5e1; border-radius: 25px; font-size: 16px; outline: none; transition: border-color 0.3s; }
+        input[type="text"]:focus { border-color: #3498db; }
+        .table-responsive { overflow-x: auto; background: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background-color: #3498db; color: white; font-weight: 600; }
+        tr:hover { background-color: #f1f5f9; }
+        .loading { text-align: center; font-style: italic; color: #7f8c8d; font-size: 18px; margin-top: 40px; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .badge-l { background-color: #e0f2fe; color: #0369a1; }
+        .badge-p { background-color: #fce7f3; color: #9d174d; }
+    </style>
+</head>
+<body>
+
+    <h2>Database Warga MTA MJG 3</h2>
+    
+    <div class="search-container">
+        <input type="text" id="searchInput" oninput="searchName()" placeholder="Cari nama warga di sini...">
+    </div>
+
+    <div id="loading" class="loading">Memuat data dari Google Sheets...</div>
+
+    <div class="table-responsive" id="tableWrapper" style="display:none;">
+        <table id="wargaTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nama</th>
+                    <th>Gender</th>
+                    <th>Status</th>
+                    <th>RT</th>
+                    <th>Tempat Lahir</th>
+                    <th>No. HP</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                </tbody>
+        </table>
+    </div>
+
+    <script>
+        const csvUrl = 'https://docs.google.com/spreadsheets/d/1H2lX5hd2s_gLnTm734OBhxr70SIgD05B9jUfzbBF0-0/pub?gid=497244178&single=true&output=csv';
+        let semuaData = [];
+
+        // Fungsi khusus untuk membaca CSV dengan aman (menangani tanda koma dalam teks jika ada)
+        function parseCSV(text) {
+            let lines = text.split('\n');
+            return lines.map(line => {
+                let matches = line.match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$|\r|$)/g);
+                return matches ? matches.map(val => val.replace(/^"|"$/g, '').trim()) : [];
+            });
+        }
+
+        async function ambilData() {
+            try {
+                const response = await fetch(csvUrl);
+                const dataText = await response.text();
+                const baris = parseCSV(dataText);
+                
+                // Dimulai dari indeks ke-2 untuk melewati dua baris header atas sheets Anda
+                for (let i = 2; i < baris.length; i++) {
+                    const kolom = baris[i];
+                    if (!kolom || kolom.length < 3 || !kolom[1]) continue; 
+                    
+                    semuaData.push({
+                        id: kolom[1] || '-',
+                        nama: kolom[2] || '-',
+                        gender: kolom[3] || '-',
+                        status: kolom[4] || '-',
+                        rt: kolom[5] || '-',
+                        tempatLahir: kolom[7] || '-',
+                        noHp: (kolom[17] || '-').replace(/'/g, '') // Menghapus tanda petik satu pada nomor HP jika ada
+                    });
+                }
+
+                tampilkanData(semuaData);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('tableWrapper').style.display = 'block';
+
+            } catch (error) {
+                console.error('Gagal memuat data:', error);
+                document.getElementById('loading').innerText = 'Gagal memuat database warga. Pastikan koneksi internet stabil.';
+            }
+        }
+
+        function tampilkanData(data) {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            
+            if (data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:gray;">Data tidak ditemukan</td></tr>`;
+                return;
+            }
+
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                const genderBadge = item.gender === 'L' ? `<span class="badge badge-l">L</span>` : (item.gender === 'P' ? `<span class="badge badge-p">P</span>` : item.gender);
+                
+                tr.innerHTML = `
+                    <td><strong>${item.id}</strong></td>
+                    <td>${item.nama}</td>
+                    <td>${genderBadge}</td>
+                    <td>${item.status}</td>
+                    <td>${item.rt}</td>
+                    <td>${item.tempatLahir}</td>
+                    <td>${item.noHp}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        function searchName() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const hasilFilter = semuaData.filter(item => item.nama.toLowerCase().includes(input));
+            tampilkanData(hasilFilter);
+        }
+
+        window.onload = ambilData;
+    </script>
+</body>
+</html>
