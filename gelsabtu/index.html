@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Database Warga MTA MJG 3</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f8f9fa; color: #333; }
         h2 { color: #2c3e50; text-align: center; margin-bottom: 25px; }
@@ -53,45 +54,51 @@
         const csvUrl = 'https://docs.google.com/spreadsheets/d/1H2lX5hd2s_gLnTm734OBhxr70SIgD05B9jUfzbBF0-0/pub?gid=497244178&single=true&output=csv';
         let semuaData = [];
 
-        // Fungsi khusus untuk membaca CSV dengan aman (menangani tanda koma dalam teks jika ada)
-        function parseCSV(text) {
-            let lines = text.split('\n');
-            return lines.map(line => {
-                let matches = line.match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$|\r|$)/g);
-                return matches ? matches.map(val => val.replace(/^"|"$/g, '').trim()) : [];
-            });
-        }
-
         async function ambilData() {
             try {
-                const response = await fetch(csvUrl);
-                const dataText = await response.text();
-                const baris = parseCSV(dataText);
-                
-                // Dimulai dari indeks ke-2 untuk melewati dua baris header atas sheets Anda
-                for (let i = 2; i < baris.length; i++) {
-                    const kolom = baris[i];
-                    if (!kolom || kolom.length < 3 || !kolom[1]) continue; 
-                    
-                    semuaData.push({
-                        id: kolom[1] || '-',
-                        nama: kolom[2] || '-',
-                        gender: kolom[3] || '-',
-                        status: kolom[4] || '-',
-                        rt: kolom[5] || '-',
-                        tempatLahir: kolom[7] || '-',
-                        noHp: (kolom[17] || '-').replace(/'/g, '') // Menghapus tanda petik satu pada nomor HP jika ada
-                    });
-                }
+                // Menggunakan Papa.parse langsung dari URL agar terhindar dari masalah CORS & salah potong koma
+                Papa.parse(csvUrl, {
+                    download: true,
+                    header: false, // Kita mapping manual berdasarkan indeks kolom
+                    complete: function(results) {
+                        const baris = results.data;
+                        
+                        // Dimulai dari indeks ke-2 untuk melewati baris judul atas sheets Anda
+                        for (let i = 2; i < baris.length; i++) {
+                            const kolom = baris[i];
+                            
+                            // Validasi jika baris kosong atau kolom ID (kolom B) kosong
+                            if (!kolom || kolom.length < 3 || !kolom[1]) continue; 
+                            
+                            semuaData.push({
+                                id: kolom[1] || '-',
+                                nama: kolom[2] || '-',
+                                gender: kolom[3] || '-',
+                                status: kolom[4] || '-',
+                                rt: kolom[5] || '-',
+                                tempatLahir: kolom[7] || '-',
+                                noHp: (kolom[17] || '-').replace(/'/g, '') // Menghapus petik satu di nomor HP jika ada
+                            });
+                        }
 
-                tampilkanData(semuaData);
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('tableWrapper').style.display = 'block';
+                        tampilkanData(semuaData);
+                        document.getElementById('loading').style.display = 'none';
+                        document.getElementById('tableWrapper').style.display = 'block';
+                    },
+                    error: function(err) {
+                        console.error('PapaParse Error:', err);
+                        tampilkan ErrorHalaman();
+                    }
+                });
 
             } catch (error) {
-                console.error('Gagal memuat data:', error);
-                document.getElementById('loading').innerText = 'Gagal memuat database warga. Pastikan koneksi internet stabil.';
+                console.error('Fetch Error:', error);
+                tampilkanErrorHalaman();
             }
+        }
+
+        function tampilkanErrorHalaman() {
+            document.getElementById('loading').innerText = 'Gagal memuat database warga. Pastikan tautan Google Sheets sudah di-Publish ke Web sebagai CSV.';
         }
 
         function tampilkanData(data) {
