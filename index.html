@@ -661,15 +661,7 @@
             });
         }
 
-        function renderMemberLogTable() {
-            const tbody = document.getElementById('member-log-table');
-            tbody.innerHTML = '';
-
-            if (!currentUser.rincianCicilan || currentUser.rincianCicilan.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#888;">Belum ada riwayat pembayaran cicilan.</td></tr>';
-                return;
-            }
-
+        
             function renderMemberLogTable() {
     const tbody = document.getElementById('member-log-table');
     tbody.innerHTML = '';
