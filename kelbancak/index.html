@@ -595,45 +595,67 @@
         }
 
         function renderDashboard() {
-            document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
-            document.getElementById('logout-btn').style.display = 'block';
+    document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+    document.getElementById('logout-btn').style.display = 'block';
 
-            if (currentUser.role === 'Admin') {
-                document.getElementById('view-admin').classList.add('active');
-                document.getElementById('admin-welcome').innerText = `Dashboard Admin: ${currentUser.profile.nama}`;
-                renderAdminTable();
-            } else if (currentUser.role === 'Anggota') {
-                document.getElementById('view-anggota').classList.add('active');
-                document.getElementById('member-welcome').innerText = `Assalaamu'alaikum, mas ${currentUser.profile.nama}!`;
-                
-                const p = currentUser.profile;
-                document.getElementById('m-kesanggupan').innerText = formatRupiah(p.targetPribadi || 0);
-                document.getElementById('m-terbayar').innerText = formatRupiah(p.totalNyicil || 0);
-                document.getElementById('m-kekurangan').innerText = formatRupiah(p.sisaTagihan || 0);
-
-                // Taruh nilai profil saat ini ke dalam form pengaturan akun
-                document.getElementById('akun-username').value = p.username;
-                document.getElementById('akun-password').value = p.password || '';
-
-                const inputTarget = document.getElementById('nominal-target-pribadi');
-                const btnSubmitTarget = document.getElementById('btn-submit-target');
-                if (Number(p.targetPribadi) > 0) {
-                    inputTarget.value = p.targetPribadi;
-                    inputTarget.disabled = true;
-                    btnSubmitTarget.disabled = true;
-                    btnSubmitTarget.innerText = 'Komitmen Sudah Terkunci';
-                    btnSubmitTarget.style.backgroundColor = '#94a3b8';
-                } else {
-                    inputTarget.value = '';
-                    inputTarget.disabled = false;
-                    btnSubmitTarget.disabled = false;
-                    btnSubmitTarget.innerText = 'Simpan Komitmen';
-                    btnSubmitTarget.style.backgroundColor = 'var(--secondary-color)';
+    if (currentUser.role === 'Admin') {
+        document.getElementById('view-admin').classList.add('active');
+        document.getElementById('admin-welcome').innerText = `Dashboard Admin: ${currentUser.profile.nama}`;
+        renderAdminTable();
+    } else if (currentUser.role === 'Anggota') {
+        document.getElementById('view-anggota').classList.add('active');
+        
+        // 1. CARI PROGRAM/TARGET YANG SEDANG AKTIF SECARA DINAMIS
+        let namaProgramAktif = "Kelompok Bancak"; // Jaga-jaga jika data global belum termuat
+        
+        const tablePublik = document.getElementById('global-target-table');
+        if (tablePublik && tablePublik.rows.length > 0) {
+            for (let i = 0; i < tablePublik.rows.length; i++) {
+                // Mencari baris yang berstatus 'Aktif' lewat tanda badge-warning
+                if (tablePublik.rows[i].innerHTML.includes('badge-warning') || tablePublik.rows[i].innerHTML.toLowerCase().includes('aktif')) {
+                    namaProgramAktif = tablePublik.rows[i].cells[0].innerText.trim();
+                    break;
                 }
-
-                renderMemberLogTable();
             }
         }
+
+        // 2. TAMPILKAN SALAM DAN DETAIL TARGET AKTIF
+        document.getElementById('member-welcome').innerHTML = `
+            Assalaamu'alaikum, mas ${currentUser.profile.nama}!<br>
+            <span style="font-size: 14px; font-weight: normal; color: #555; display: inline-block; margin-top: 5px;">
+                Berikut adalah rincian kesanggupan untuk <strong>${namaProgramAktif}</strong>:
+            </span>
+        `;
+        
+        const p = currentUser.profile;
+        document.getElementById('m-kesanggupan').innerText = formatRupiah(p.targetPribadi || 0);
+        document.getElementById('m-terbayar').innerText = formatRupiah(p.totalNyicil || 0);
+        document.getElementById('m-kekurangan').innerText = formatRupiah(p.sisaTagihan || 0);
+
+        // Taruh nilai profil saat ini ke dalam form pengaturan akun
+        document.getElementById('akun-username').value = p.username;
+        document.getElementById('akun-password').value = p.password || '';
+
+        const inputTarget = document.getElementById('nominal-target-pribadi');
+        const btnSubmitTarget = document.getElementById('btn-submit-target');
+        if (Number(p.targetPribadi) > 0) {
+            inputTarget.value = p.targetPribadi;
+            inputTarget.disabled = true;
+            btnSubmitTarget.disabled = true;
+            btnSubmitTarget.innerText = 'Komitmen Sudah Terkunci';
+            btnSubmitTarget.style.backgroundColor = '#94a3b8';
+        } else {
+            inputTarget.value = '';
+            inputTarget.disabled = false;
+            btnSubmitTarget.disabled = false;
+            btnSubmitTarget.innerText = 'Simpan Komitmen';
+            btnSubmitTarget.style.backgroundColor = 'var(--secondary-color)';
+        }
+
+        renderMemberLogTable();
+    }
+}
+
 
         function renderAdminTable() {
     const tbody = document.getElementById('admin-anggota-table');
