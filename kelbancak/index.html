@@ -661,26 +661,43 @@
             });
         }
 
-        function renderMemberLogTable() {
-            const tbody = document.getElementById('member-log-table');
-            tbody.innerHTML = '';
+        
+            function renderMemberLogTable() {
+    const tbody = document.getElementById('member-log-table');
+    tbody.innerHTML = '';
 
-            if (!currentUser.rincianCicilan || currentUser.rincianCicilan.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#888;">Belum ada riwayat pembayaran cicilan.</td></tr>';
-                return;
+    if (!currentUser.rincianCicilan || currentUser.rincianCicilan.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#888;">Belum ada riwayat pembayaran cicilan.</td></tr>';
+        return;
+    }
+
+    currentUser.rincianCicilan.forEach(log => {
+        // AMAN & ANTI-ERROR: Ekstrak format jam secara fleksibel menggunakan Regex
+        let jamBersih = "00:00";
+        if (log.jam) {
+            const stringJam = log.jam.toString();
+            // Mencari pola angka jam (misal: 12:25) di dalam teks bawaan Sheets
+            const match = stringJam.match(/(\d{2}:\d{2})/);
+            if (match) {
+                jamBersih = match[1]; // Mengambil angka jam & menit yang cocok
+            } else {
+                // Jaga-jaga jika formatnya sangat pendek/berbeda
+                jamBersih = stringJam.substring(0, 5);
             }
-
-            currentUser.rincianCicilan.forEach(log => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td style="font-weight:600; color:var(--secondary-color);">${formatRupiah(log.nominal)}</td>
-                        <td>${log.tanggal}</td>
-                        <td>${log.hari}</td>
-                        <td><small>${log.jam}</small></td>
-                    </tr>
-                `;
-            });
         }
+
+        tbody.innerHTML += `
+            <tr>
+                <td style="font-weight:600; color:var(--secondary-color);">${formatRupiah(log.nominal)}</td>
+                <td>${log.tanggal}</td>
+                <td>${log.hari}</td>
+                <td><strong>${jamBersih} WIB</strong></td>
+            </tr>
+        `;
+    });
+            }
+          
+        
 
         function kirimPesanWA(noWa, nama, username, password) {
             if (!noWa) return alert('Nomor WhatsApp tidak valid atau kosong!');
