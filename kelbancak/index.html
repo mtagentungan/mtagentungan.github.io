@@ -603,7 +603,7 @@
                 renderAdminTable();
             } else if (currentUser.role === 'Anggota') {
                 document.getElementById('view-anggota').classList.add('active');
-                document.getElementById('member-welcome').innerText = `Selamat Datang, ${currentUser.profile.nama}!`;
+                document.getElementById('member-welcome').innerText = `Assalaamu'alaikum mas,${currentUser.profile.nama}!`;
                 
                 const p = currentUser.profile;
                 document.getElementById('m-kesanggupan').innerText = formatRupiah(p.targetPribadi || 0);
