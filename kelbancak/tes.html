@@ -4,108 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Keuangan Kelompok Bancak</title>
+    <!-- Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/4.1.7/signature_pad.umd.min.js"></script>
     <style>
-        :root { --primary-color: #2c3e50; --secondary-color: #18bc9c; --accent-color: #e74c3c; --bg-color: #f8f9fa; --card-bg: #ffffff; --text-color: #333333; --border-color: #e2e8f0; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-color); padding-bottom: 60px; }
-        .container { width: 100%; max-width: 1000px; margin: 0 auto; padding: 20px; }
-        
-        /* Layout components */
-        header { background-color: var(--primary-color); color: white; padding: 20px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .card { background: var(--card-bg); border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border-color); }
-        .card-title { font-size: 18px; font-weight: 600; margin-bottom: 15px; border-left: 4px solid var(--secondary-color); padding-left: 10px; }
-        
-        /* Signature Canvas */
-        .signature-container { border: 1px solid var(--border-color); border-radius: 4px; padding: 5px; margin: 10px 0; }
-        canvas { width: 100%; height: 150px; cursor: crosshair; touch-action: none; background: #fafafa; }
-        
-        .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: 600; }
-        .btn-block { display: block; width: 100%; }
-        .bg-secondary { background-color: var(--secondary-color); }
-        .bg-accent { background-color: var(--accent-color); }
-        .view-section { display: none; }
-        .view-section.active { display: block; }
-        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; }
-        .modal-content { background:white; padding:20px; border-radius:8px; width:90%; max-width:400px; }
+        /* Masukkan CSS Anda di sini agar tetap rapi */
+        .signature-container { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+        canvas { width: 100%; height: 150px; background: #fafafa; border: 1px dashed #999; }
     </style>
 </head>
 <body>
-
-<header>
+    <header><h1>Kelompok Bancak</h1></header>
     <div class="container">
-        <h1>Kelompok Bancak</h1>
+        <!-- Dashboard/View Section -->
+        <div id="view-anggota" class="view-section">
+            <button onclick="openNyicilModal()">+ Input Cicilan</button>
+        </div>
     </div>
-</header>
 
-<div class="container">
-    <div id="view-publik" class="view-section active">
-        <div class="card">
-            <div class="card-title">Daftar Target Kesanggupan</div>
-            <table style="width:100%; border-collapse:collapse;">
-                <thead><tr><th>Nama</th><th>Target</th><th>Status</th></tr></thead>
-                <tbody id="global-target-table"></tbody>
-            </table>
-        </div>
-        
-        <div class="card">
-            <div class="card-title">Riwayat Setoran ke Bendahara</div>
-            <table style="width:100%; border-collapse:collapse;">
-                <tbody id="riwayat-setoran-table"></tbody>
-            </table>
-        </div>
-
-        <div class="card">
-            <form id="login-form">
-                <input type="text" id="username" class="form-control" placeholder="Username" required>
-                <input type="password" id="password" class="form-control" placeholder="Password" required>
-                <button type="submit" class="btn btn-block bg-secondary" style="margin-top:10px;">Login</button>
+    <!-- Modal Cicilan -->
+    <div id="nyicil-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <form id="nyicil-form">
+                <input type="number" id="nyicil-nominal" placeholder="Nominal" required>
+                <div class="signature-container">
+                    <canvas id="sig-pad"></canvas>
+                </div>
+                <button type="button" onclick="sig.clear()">Hapus</button>
+                <button type="submit">Simpan</button>
             </form>
         </div>
     </div>
 
-    <div id="view-anggota" class="view-section">
-        </div>
-</div>
-
-<div id="nyicil-modal" class="modal">
-    <div class="modal-content">
-        <form id="nyicil-form">
-            <label>Nominal Cicilan</label>
-            <input type="number" id="nyicil-nominal" class="form-control" required>
-            <label>Tanda Tangan</label>
-            <div class="signature-container">
-                <canvas id="sig-pad-nyicil"></canvas>
-            </div>
-            <button type="button" onclick="sigNyicil.clear()">Hapus TTD</button>
-            <button type="submit" class="btn bg-secondary">Simpan</button>
-        </form>
-    </div>
-</div>
-
-<script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyBOSPFTuEq8cvAXbTrdQxwfYxDWMhZbY62UD3_yc5YfQZ0BQUABwmDSuKilAYJxb5TCA/exec";
-    
-    // Inisialisasi Signature Pad
-    const sigNyicil = new SignaturePad(document.getElementById('sig-pad-nyicil'));
-
-    // Fungsi Submit dengan TTD
-    document.getElementById('nyicil-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        if (sigNyicil.isEmpty()) return alert("Tanda tangan diperlukan!");
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbyBOSPFTuEq8cvAXbTrdQxwfYxDWMhZbY62UD3_yc5YfQZ0BQUABwmDSuKilAYJxb5TCA/exec";
+        const sig = new SignaturePad(document.getElementById('sig-pad'));
         
-        const payload = {
-            action: 'tambahCicilan',
-            nominal: document.getElementById('nyicil-nominal').value,
-            ttd: sigNyicil.toDataURL()
+        function openNyicilModal() { document.getElementById('nyicil-modal').style.display = 'flex'; }
+        
+        // Logika pengiriman data ke GAS
+        document.getElementById('nyicil-form').onsubmit = (e) => {
+            e.preventDefault();
+            const data = {
+                action: 'tambahCicilan',
+                nominal: document.getElementById('nyicil-nominal').value,
+                ttd: sig.toDataURL()
+            };
+            fetch(API_URL, { method: 'POST', body: JSON.stringify(data) })
+            .then(res => alert("Berhasil!"));
         };
-        
-        fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) })
-        .then(() => alert("Berhasil!"));
-    });
-
-    // Tambahkan fungsi-fungsi lainnya seperti fetchGlobalData, handleLogin, dll sesuai skrip sebelumnya.
-</script>
-
+    </script>
 </body>
 </html>
