@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>POS Kasir Toko Bahan Bangunan</title>
-    <!-- Tailwind CSS (Embedded via standard production CDN link style but embedded as inline equivalent simulated via standard styles) -->
     <style>
         *, *::before, *::after { box-sizing: border-box; }
         body {
@@ -83,8 +82,6 @@
         .btn:hover { background-color: #1d4ed8; }
         .btn-success { background-color: #10b981; }
         .btn-success:hover { background-color: #059669; }
-        .btn-secondary { background-color: #6b7280; }
-        .btn-secondary:hover { background-color: #555b66; }
         
         table {
             width: 100%;
@@ -99,13 +96,6 @@
         }
         th { background-color: #f9fafb; font-weight: 600; }
         
-        .keranjang-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #f3f4f6;
-        }
         .total-box {
             background-color: #f8fafc;
             padding: 15px;
@@ -118,77 +108,27 @@
             color: #1e3a8a;
         }
         
-        /* PRINT RECEIPT & REPORT FORMAL LAYOUT */
-        #printArea {
-            display: none;
-        }
+        /* LAYOUT NOTA FORMAL UNTUK PRINT */
+        #printArea { display: none; }
         
         @media print {
-            body * {
-                visibility: hidden;
-            }
-            #printArea, #printArea * {
-                visibility: visible;
-            }
+            body * { visibility: hidden; }
+            #printArea, #printArea * { visibility: visible; }
             #printArea {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                display: block;
-                background: white;
-                color: black;
-                padding: 20mm;
-                font-family: 'Times New Roman', Times, serif;
+                position: absolute; left: 0; top: 0; width: 100%;
+                display: block; background: white; color: black;
+                padding: 20mm; font-family: 'Times New Roman', Times, serif;
             }
-            .invoice-header {
-                text-align: center;
-                border-bottom: 3px double #000;
-                padding-bottom: 10px;
-                margin-bottom: 20px;
-            }
+            .invoice-header { text-align: center; border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 20px; }
             .invoice-header h2 { margin: 0; font-size: 24px; text-transform: uppercase; }
-            .invoice-meta {
-                display: table;
-                width: 100%;
-                margin-bottom: 20px;
-                font-size: 14px;
-            }
-            .invoice-meta-col {
-                display: table-cell;
-                width: 50%;
-            }
-            .print-table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 15px;
-            }
-            .print-table th, .print-table td {
-                border: 1px solid #000;
-                padding: 8px;
-                font-size: 13px;
-            }
-            .print-table th {
-                background-color: #f2f2f2 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            .print-total {
-                text-align: right;
-                font-weight: bold;
-                font-size: 16px;
-                margin-top: 20px;
-            }
-            .invoice-footer {
-                margin-top: 50px;
-                display: table;
-                width: 100%;
-                text-align: center;
-            }
-            .signature-box {
-                display: table-cell;
-                width: 50%;
-            }
+            .invoice-meta { display: table; width: 100%; margin-bottom: 20px; font-size: 14px; }
+            .invoice-meta-col { display: table-cell; width: 50%; }
+            .print-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            .print-table th, .print-table td { border: 1px solid #000; padding: 8px; font-size: 13px; }
+            .print-table th { background-color: #f2f2f2 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-total { text-align: right; font-weight: bold; font-size: 16px; margin-top: 20px; }
+            .invoice-footer { margin-top: 50px; display: table; width: 100%; text-align: center; }
+            .signature-box { display: table-cell; width: 50%; }
         }
     </style>
 </head>
@@ -198,34 +138,33 @@
     <header>
         <div>
             <h1>POS Toko Bahan Bangunan</h1>
-            <small>Integrasi Google Sheets & GitHub Pages</small>
+            <small>Database Live Google Sheets</small>
         </div>
         <div id="clock" style="font-weight: 600;"></div>
     </header>
 
     <div class="grid">
-        <!-- SISI KIRI: INPUT TRANSAKSI & CARI BARANG -->
         <div>
             <div class="card">
-                <h2>Cari & Tambah Produk (Simulasi 2.000 Barang)</h2>
+                <h2>Cari & Tambah Produk</h2>
                 <div class="form-group">
                     <label for="searchBarang">Ketik Nama atau ID Barang</label>
-                    <input type="text" id="searchBarang" placeholder="Contoh: Semen, Besi, Cat..." oninput="cariBarang()">
+                    <input type="text" id="searchBarang" placeholder="Ketik di sini untuk mencari..." oninput="cariBarang()">
                 </div>
                 
-                <div style="max-height: 200px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px;">
-                    <table id="tableHasilCari">
+                <div style="max-height: 220px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px;">
+                    <table>
                         <thead>
                             <tr>
                                 <th>ID</th>
                                 <th>Nama Barang</th>
                                 <th>Satuan</th>
-                                <th>Harga</th>
+                                <th>Harga Jual</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="hasilCariBody">
-                            <!-- Hasil pencarian instan muncul di sini -->
+                            <tr><td colspan="5" style="text-align:center; color:#9ca3af;">Memuat data...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -233,7 +172,7 @@
 
             <div class="card">
                 <h2>Keranjang Belanja Aktif</h2>
-                <table id="tableKeranjang">
+                <table>
                     <thead>
                         <tr>
                             <th>Nama Barang</th>
@@ -245,19 +184,17 @@
                         </tr>
                     </thead>
                     <tbody id="keranjangBody">
-                        <!-- Item belanja masuk ke sini -->
-                    </tbody>
+                        </tbody>
                 </table>
                 <div id="emptyCartMessage" style="text-align: center; color: #9ca3af; padding: 20px;">
-                    Keranjang kosong. Cari barang di atas dan klik tambah.
+                    Keranjang kosong.
                 </div>
             </div>
         </div>
 
-        <!-- SISI KANAN: PEMBAYARAN & METODE -->
         <div>
             <div class="card">
-                <h2>Detail Pembayaran & Validasi</h2>
+                <h2>Detail Pembayaran</h2>
                 
                 <div class="form-group">
                     <label for="idTransaksi">ID Transaksi</label>
@@ -266,7 +203,7 @@
 
                 <div class="form-group">
                     <label for="namaPelanggan">Nama Pelanggan / Kontraktor</label>
-                    <input type="text" id="namaPelanggan" value="Umum" placeholder="Masukkan nama jika kredit/bon">
+                    <input type="text" id="namaPelanggan" value="Umum">
                 </div>
 
                 <div class="form-group">
@@ -277,9 +214,7 @@
                     </select>
                 </div>
 
-                <div id="totalBayarBox" class="total-box">
-                    Rp 0
-                </div>
+                <div id="totalBayarBox" class="total-box">Rp 0</div>
 
                 <div class="form-group" id="inputBayarGroup">
                     <label for="jumlahBayar">Jumlah Uang Tunai (Rp)</label>
@@ -287,8 +222,8 @@
                 </div>
 
                 <div class="form-group" id="kembalianGroup">
-                    <label>Kembalian (Rp)</label>
-                    <div id="kembalianBox" style="font-size: 16px; font-weight: bold; color: #10b981; padding: 5px 0;">Rp 0</div>
+                    <label>Kembalian</label>
+                    <div id="kembalianBox" style="font-size: 16px; font-weight: bold; color: #10b981;">Rp 0</div>
                 </div>
 
                 <div style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -300,14 +235,12 @@
     </div>
 </div>
 
-<!-- ================= AREA CETAK FORMAL (TERSEMBUNYI DI LAYAR, MUNCUL SAAT PRINT) ================= -->
 <div id="printArea">
     <div class="invoice-header">
         <h2>NOTA PENJUALAN RESMI</h2>
         <div style="font-size: 16px; font-weight: bold; margin-top: 5px;">TOKO BAHAN BANGUNAN UTAMA</div>
-        <div style="font-size: 12px; font-style: italic;">Jl. Raya Industri No. 45, Telp: (021) 555-1234</div>
+        <div style="font-size: 12px; font-style: italic;">Sistem POS Kasir Otomatis</div>
     </div>
-
     <div class="invoice-meta">
         <div class="invoice-meta-col">
             <p><strong>No. Transaksi:</strong> <span id="p-idtransaksi"></span></p>
@@ -315,10 +248,9 @@
         </div>
         <div class="invoice-meta-col" style="text-align: right;">
             <p><strong>Kepada Yth:</strong> <span id="p-pelanggan"></span></p>
-            <p><strong>Status Bayar:</strong> <span id="p-status" style="text-transform: uppercase; font-weight: bold;"></span></p>
+            <p><strong>Status Bayar:</strong> <span id="p-status"></span></p>
         </div>
     </div>
-
     <table class="print-table">
         <thead>
             <tr>
@@ -330,75 +262,35 @@
                 <th style="width: 15%; text-align: right;">Subtotal</th>
             </tr>
         </thead>
-        <tbody id="printTableBody">
-            <!-- Isi keranjang disalin otomatis ke sini saat print -->
-        </tbody>
+        <tbody id="printTableBody"></tbody>
     </table>
-
-    <div class="print-total">
-        TOTAL AKHIR: <span id="p-total"></span>
-    </div>
-    
+    <div class="print-total">TOTAL AKHIR: <span id="p-total"></span></div>
     <div id="printKembalianRow" style="text-align: right; font-size: 14px; margin-top: 5px; font-style: italic;">
         Tunai: <span id="p-tunai"></span> | Kembalian: <span id="p-kembalian"></span>
     </div>
-
     <div class="invoice-footer">
-        <div class="signature-box">
-            <p>Penerima / Pelanggan</p>
-            <br><br><br>
-            <p>( _______________________ )</p>
-        </div>
-        <div class="signature-box">
-            <p>Hormat Kami, Kasir</p>
-            <br><br><br>
-            <p>( _______________________ )</p>
-        </div>
+        <div class="signature-box"><p>Penerima / Pelanggan</p><br><br><br><p>( _______________________ )</p></div>
+        <div class="signature-box"><p>Hormat Kami, Kasir</p><br><br><br><p>( _______________________ )</p></div>
     </div>
 </div>
 
 <script>
-    // 1. TENTUKAN URL GOOGLE APPS SCRIPT ANDA DI SINI
-const URL_API_SHEETS = "https://script.google.com/macros/s/AKfycbyZyAkcNaw9cJSE1CIjz_c7ZvRjvCufjo8AsPOcnKMcHgvu1tHGzUEIuUBMefDB5erQ/exec";
+    // Taruh URL Google Apps Script Web App Anda di sini
+    const URL_API_SHEETS = "https://script.google.com/macros/s/AKfycbyZyAkcNaw9cJSE1CIjz_c7ZvRjvCufjo8AsPOcnKMcHgvu1tHGzUEIuUBMefDB5erQ/exec";
 
-let databaseBarangMaster = []; // Sekarang dimulai dari kosongan
-let keranjang = [];
-let totalBayar = 0;
+    let databaseBarangMaster = [];
+    let keranjang = [];
+    let totalBayar = 0;
 
-// Inisialisasi Aplikasi
-window.onload = function() {
-    generateIDTransaksi();
-    updateClock();
-    setInterval(updateClock, 1000);
-    
-    // Panggil fungsi untuk mengambil data dari Google Sheets saat aplikasi dibuka
-    muatDataDariGoogleSheets();
-};
-
-// 2. FUNGSI UNTUK MENGAMBIL DATA ASLI DARI GOOGLE SHEETS
-async function muatDataDariGoogleSheets() {
-    const tbody = document.getElementById('hasilCariBody');
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:blue;">Mengunduh 2.000+ data barang dari Google Sheets...</td></tr>`;
-    
-    try {
-        // Mengambil data dari API Google Apps Script
-        const response = await fetch(URL_API_SHEETS);
-        const dataAsli = await response.json();
-        
-        // Masukkan data asli ke dalam database lokal browser
-        databaseBarangMaster = dataAsli;
-        
-        // Tampilkan beberapa barang di layar setelah berhasil memuat
-        cariBarang(); 
-    } catch (error) {
-        console.error("Gagal memuat data:", error);
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Gagal mengambil data dari Google Sheets. Periksa koneksi internet atau URL API Anda.</td></tr>`;
-    }
-}
+    window.onload = function() {
+        generateIDTransaksi();
+        updateClock();
+        setInterval(updateClock, 1000);
+        muatDataDariGoogleSheets();
+    };
 
     function updateClock() {
-        const now = new Date();
-        document.getElementById('clock').innerText = now.toLocaleString('id-ID');
+        document.getElementById('clock').innerText = new Date().toLocaleString('id-ID');
     }
 
     function generateIDTransaksi() {
@@ -407,16 +299,41 @@ async function muatDataDariGoogleSheets() {
         document.getElementById('idTransaksi').value = "TRX-" + timestamp;
     }
 
-    // Pencarian Instan Lokal (0 Milidetik untuk 2.000 Barang)
+    async function muatDataDariGoogleSheets() {
+        const tbody = document.getElementById('hasilCariBody');
+        try {
+            const response = await fetch(URL_API_SHEETS);
+            const dataAsli = await response.json();
+            
+            // KUNCI PERBAIKAN: Memastikan data dipetakan dengan benar & aman dari huruf besar/kecil
+            databaseBarangMaster = dataAsli.map(item => ({
+                id: String(item.id || item.ID || ''),
+                nama: String(item.nama || item.Nama || item.nama_barang || ''),
+                satuan: String(item.satuan || item.Satuan || ''),
+                harga: Number(item.harga || item.Harga || item.harga_jual || 0),
+                stok: Number(item.stok || item.Stok || 0)
+            }));
+            
+            cariBarang(); 
+        } catch (error) {
+            console.error("Gagal memuat data:", error);
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Gagal memuat database Google Sheets.</td></tr>`;
+        }
+    }
+
     function cariBarang() {
         const keyword = document.getElementById('searchBarang').value.toLowerCase();
         const tbody = document.getElementById('hasilCariBody');
         tbody.innerHTML = "";
 
-        // Filter maksimum 10 data kecocokan agar tampilan tidak penuh
         const hasilFilter = databaseBarangMaster.filter(b => 
             b.nama.toLowerCase().includes(keyword) || b.id.toLowerCase().includes(keyword)
-        ).slice(0, 8);
+        ).slice(0, 10);
+
+        if(hasilFilter.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:gray;">Barang tidak ditemukan.</td></tr>`;
+            return;
+        }
 
         hasilFilter.forEach(b => {
             let row = `<tr>
@@ -424,20 +341,28 @@ async function muatDataDariGoogleSheets() {
                 <td><strong>${b.nama}</strong></td>
                 <td>${b.satuan}</td>
                 <td>Rp ${b.harga.toLocaleString('id-ID')}</td>
-                <td><button class="btn btn-success" style="padding:4px 8px; font-size:12px;" onclick="tambahKeKeranjang('${b.id}')">+ Tambah</button></td>
+                <td><button class="btn btn-success" style="padding:4px 8px; font-size:12px; width:auto;" onclick="tambahKeKeranjang('${b.id}')">+ Tambah</button></td>
             </tr>`;
             tbody.innerHTML += row;
         });
     }
 
+    // PERBAIKAN UTAMA: Mencari ID dengan tipe data String yang konsisten
     function tambahKeKeranjang(id) {
-        const barang = databaseBarangMaster.find(b => b.id === id);
-        const itemAda = keranjang.find(item => item.id === id);
+        const barang = databaseBarangMaster.find(b => String(b.id) === String(id));
+        
+        if (!barang) {
+            alert("Sistem gagal mengidentifikasi data barang.");
+            return;
+        }
+
+        const itemAda = keranjang.find(item => String(item.id) === String(id));
 
         if (itemAda) {
             itemAda.qty++;
             itemAda.subtotal = itemAda.qty * itemAda.harga;
         } else {
+            // Memasukkan detail barang lengkap ke dalam array keranjang
             keranjang.push({
                 id: barang.id,
                 nama: barang.nama,
@@ -451,7 +376,7 @@ async function muatDataDariGoogleSheets() {
     }
 
     function ubahQty(id, qtyBaru) {
-        const item = keranjang.find(item => item.id === id);
+        const item = keranjang.find(item => String(item.id) === String(id));
         if (item) {
             item.qty = parseInt(qtyBaru) || 1;
             item.subtotal = item.qty * item.harga;
@@ -460,7 +385,7 @@ async function muatDataDariGoogleSheets() {
     }
 
     function hapusItem(id) {
-        keranjang = keranjang.filter(item => item.id !== id);
+        keranjang = keranjang.filter(item => String(item.id) !== String(id));
         renderKeranjang();
     }
 
@@ -479,7 +404,7 @@ async function muatDataDariGoogleSheets() {
         keranjang.forEach(item => {
             totalBayar += item.subtotal;
             let row = `<tr>
-                <td>${item.nama}</td>
+                <td><strong>${item.nama}</strong></td>
                 <td>Rp ${item.harga.toLocaleString('id-ID')}</td>
                 <td><input type="number" value="${item.qty}" min="1" style="width:60px; padding:4px;" onchange="ubahQty('${item.id}', this.value)"></td>
                 <td>${item.satuan}</td>
@@ -495,16 +420,8 @@ async function muatDataDariGoogleSheets() {
 
     function toggleKreditInfo() {
         const jenis = document.getElementById('jenisPembayaran').value;
-        const inputBayarGroup = document.getElementById('inputBayarGroup');
-        const kembalianGroup = document.getElementById('kembalianGroup');
-        
-        if (jenis === "Kredit") {
-            inputBayarGroup.style.display = "none";
-            kembalianGroup.style.display = "none";
-        } else {
-            inputBayarGroup.style.display = "block";
-            kembalianGroup.style.display = "block";
-        }
+        document.getElementById('inputBayarGroup').style.display = (jenis === "Kredit") ? "none" : "block";
+        document.getElementById('kembalianGroup').style.display = (jenis === "Kredit") ? "none" : "block";
     }
 
     function hitungKembalian() {
@@ -521,7 +438,6 @@ async function muatDataDariGoogleSheets() {
         }
     }
 
-    // PROSES TRANSAKSI & PENYALINAN DATA KE AREA NOTA FORMAL
     function prosesTransaksi(siapPrint) {
         if (keranjang.length === 0) {
             alert("Keranjang masih kosong!");
@@ -539,7 +455,7 @@ async function muatDataDariGoogleSheets() {
             return;
         }
 
-        // 1. ISI DATA KE NOTA FORMAL UNTUK PRINT MEDIA
+        // Cetak data ke area nota
         document.getElementById('p-idtransaksi').innerText = idTrx;
         document.getElementById('p-waktu').innerText = waktuTrx;
         document.getElementById('p-pelanggan').innerText = pelanggan;
@@ -554,7 +470,6 @@ async function muatDataDariGoogleSheets() {
             document.getElementById('printKembalianRow').style.display = "none";
         }
 
-        // Ambil data keranjang ke print table
         const pBody = document.getElementById('printTableBody');
         pBody.innerHTML = "";
         keranjang.forEach((item, index) => {
@@ -569,41 +484,34 @@ async function muatDataDariGoogleSheets() {
             pBody.innerHTML += row;
         });
 
-        // 2. LOGIKA KIRIM DATA KE GOOGLE SHEETS API (Simulasi fetch ke Apps Script)
-        console.log("Mengirim data transaksi ke Google Sheets...");
-        
-        // Ganti dengan URL Aplikasi Web dari Apps Script Anda
-const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwOYdG8E6MRXHaT5iZKg4z8wk9o8dff__39rTe3MvHXPpXMdyrTzzCSDnBlI8fhVM6B/exec";
-
-fetch(URL_APPS_SCRIPT, {
-    method: 'POST',
-    mode: 'no-cors', // Penting agar tidak terkena hambatan CORS browser
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-        id_transaksi: idTrx,
-        waktu: waktuTrx,
-        total_bayar: totalBayar,
-        jenis_pembayaran: jenisBayar,
-        pelanggan: pelanggan,
-        keranjang: keranjang // Array berisi item-item yang dibeli
-    })
-});
-
-        alert(`Transaksi ${idTrx} BERHASIL DISIMPAN ke Google Sheets!`);
-
-        // 3. JALANKAN PERINTAH PRINT WINDOW JIKA DIPILIH
-        if (siapPrint) {
-            window.print();
-        }
-
-        // Reset Formulir
-        keranjang = [];
-        document.getElementById('namaPelanggan').value = "Umum";
-        document.getElementById('jumlahBayar').value = "";
-        generateIDTransaksi();
-        renderKeranjang();
+        // Kirim Transaksi ke Google Sheets API
+        fetch(URL_API_SHEETS, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id_transaksi: idTrx,
+                waktu: waktuTrx,
+                total_bayar: totalBayar,
+                jenis_pembayaran: jenisBayar,
+                pelanggan: pelanggan,
+                keranjang: keranjang
+            })
+        }).then(() => {
+            alert(`Transaksi ${idTrx} Berhasil Disimpan ke Google Sheets!`);
+            if (siapPrint) { window.print(); }
+            
+            // Reset Formulir
+            keranjang = [];
+            document.getElementById('namaPelanggan').value = "Umum";
+            document.getElementById('jumlahBayar').value = "";
+            generateIDTransaksi();
+            renderKeranjang();
+        }).catch(err => {
+            alert("Gagal mengirim data ke Google Sheets, periksa koneksi.");
+            console.error(err);
+        });
     }
 </script>
-
 </body>
 </html>
