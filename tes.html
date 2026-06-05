@@ -563,19 +563,22 @@
         // 2. LOGIKA KIRIM DATA KE GOOGLE SHEETS API (Simulasi fetch ke Apps Script)
         console.log("Mengirim data transaksi ke Google Sheets...");
         
-        /* KODE FETCH NYATA YANG AKAN BERJALAN:
-        fetch(URL_APPS_SCRIPT, {
-            method: 'POST',
-            body: JSON.stringify({
-                id_transaksi: idTrx,
-                waktu: waktuTrx,
-                total_bayar: totalBayar,
-                jenis_pembayaran: jenisBayar,
-                pelanggan: pelanggan,
-                keranjang: keranjang
-            })
-        });
-        */
+        // Ganti dengan URL Aplikasi Web dari Apps Script Anda
+const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwOYdG8E6MRXHaT5iZKg4z8wk9o8dff__39rTe3MvHXPpXMdyrTzzCSDnBlI8fhVM6B/exec";
+
+fetch(URL_APPS_SCRIPT, {
+    method: 'POST',
+    mode: 'no-cors', // Penting agar tidak terkena hambatan CORS browser
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        id_transaksi: idTrx,
+        waktu: waktuTrx,
+        total_bayar: totalBayar,
+        jenis_pembayaran: jenisBayar,
+        pelanggan: pelanggan,
+        keranjang: keranjang // Array berisi item-item yang dibeli
+    })
+});
 
         alert(`Transaksi ${idTrx} BERHASIL DISIMPAN ke Google Sheets!`);
 
