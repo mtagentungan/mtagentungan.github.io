@@ -358,34 +358,43 @@
 </div>
 
 <script>
-    // SIMULASI CACHING 2.000 DATA BARANG DI SISI FRONT-END (Agar Cepat & Nyaman)
-    const databaseBarangMaster = [];
-    const namaSampel = ["Semen Tiga Roda 40kg", "Besi Beton 10mm SNI", "Cat Tembok Dulux 5kg", "Paku Kayu 3 Inch", "Triplek 9mm", "Pipa PVC Wavin 3 Inch", "Pasir Merapi per Colt", "Bata Merah Press", "Keramik Roman 40x40", "Semen Padang 50kg"];
-    const satuanSampel = ["Sak", "Batang", "Pail", "Kg", "Lembar", "Batang", "Rit", "Pcs", "Dus", "Sak"];
-    const hargaSampel = [65000, 85000, 210000, 18000, 75000, 95000, 650000, 900, 115000, 72000];
+    // 1. TENTUKAN URL GOOGLE APPS SCRIPT ANDA DI SINI
+const URL_API_SHEETS = "https://script.google.com/macros/s/AKfycbyZyAkcNaw9cJSE1CIjz_c7ZvRjvCufjo8AsPOcnKMcHgvu1tHGzUEIuUBMefDB5erQ/exec";
 
-    // Generate otomatis 2.000 barang acak untuk simulasi performa nyata
-    for (let i = 1; i <= 2000; i++) {
-        let idx = i % namaSampel.length;
-        databaseBarangMaster.push({
-            id: "BRG-" + String(i).padStart(4, '0'),
-            nama: namaSampel[idx] + " (Varian-" + i + ")",
-            satuan: satuanSampel[idx],
-            harga: hargaSampel[idx] + (i % 5 * 1000), // Variasi harga sedikit
-            stok: 100 + (i % 50)
-        });
+let databaseBarangMaster = []; // Sekarang dimulai dari kosongan
+let keranjang = [];
+let totalBayar = 0;
+
+// Inisialisasi Aplikasi
+window.onload = function() {
+    generateIDTransaksi();
+    updateClock();
+    setInterval(updateClock, 1000);
+    
+    // Panggil fungsi untuk mengambil data dari Google Sheets saat aplikasi dibuka
+    muatDataDariGoogleSheets();
+};
+
+// 2. FUNGSI UNTUK MENGAMBIL DATA ASLI DARI GOOGLE SHEETS
+async function muatDataDariGoogleSheets() {
+    const tbody = document.getElementById('hasilCariBody');
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:blue;">Mengunduh 2.000+ data barang dari Google Sheets...</td></tr>`;
+    
+    try {
+        // Mengambil data dari API Google Apps Script
+        const response = await fetch(URL_API_SHEETS);
+        const dataAsli = await response.json();
+        
+        // Masukkan data asli ke dalam database lokal browser
+        databaseBarangMaster = dataAsli;
+        
+        // Tampilkan beberapa barang di layar setelah berhasil memuat
+        cariBarang(); 
+    } catch (error) {
+        console.error("Gagal memuat data:", error);
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Gagal mengambil data dari Google Sheets. Periksa koneksi internet atau URL API Anda.</td></tr>`;
     }
-
-    let keranjang = [];
-    let totalBayar = 0;
-
-    // Inisialisasi Aplikasi
-    window.onload = function() {
-        generateIDTransaksi();
-        updateClock();
-        setInterval(updateClock, 1000);
-        cariBarang(); // Tampilkan beberapa barang default
-    };
+}
 
     function updateClock() {
         const now = new Date();
