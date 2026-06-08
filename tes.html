@@ -276,7 +276,7 @@
 
 <script>
     // Taruh URL Google Apps Script Web App Anda di sini
-    const URL_API_SHEETS = "https://script.google.com/macros/s/AKfycbyZyAkcNaw9cJSE1CIjz_c7ZvRjvCufjo8AsPOcnKMcHgvu1tHGzUEIuUBMefDB5erQ/exec";
+    const URL_API_SHEETS = "https://script.google.com/macros/s/AKfycbz-4F8wga_rPMDzAuqgA98d4DTGKiUqQE71zgS4_Xh-nhRbKo7KhxhDXGG988j9vbWQ/exec";
 
     let databaseBarangMaster = [];
     let keranjang = [];
@@ -499,32 +499,33 @@ function tambahKeKeranjangByIndeks(indeks) {
         });
 
         // Kirim Transaksi ke Google Sheets API
-        fetch(URL_API_SHEETS, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id_transaksi: idTrx,
-                waktu: waktuTrx,
-                total_bayar: totalBayar,
-                jenis_pembayaran: jenisBayar,
-                pelanggan: pelanggan,
-                keranjang: keranjang
-            })
-        }).then(() => {
-            alert(`Transaksi ${idTrx} Berhasil Disimpan ke Google Sheets!`);
-            if (siapPrint) { window.print(); }
-            
-            // Reset Formulir
-            keranjang = [];
-            document.getElementById('namaPelanggan').value = "Umum";
-            document.getElementById('jumlahBayar').value = "";
-            generateIDTransaksi();
-            renderKeranjang();
-        }).catch(err => {
-            alert("Gagal mengirim data ke Google Sheets, periksa koneksi.");
-            console.error(err);
-        });
+        // Kirim Transaksi ke Google Sheets API
+fetch(URL_API_SHEETS, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        id_transaksi: idTrx,
+        waktu: waktuTrx,
+        total_bayar: totalBayar,
+        jenis_pembayaran: jenisBayar,
+        pelanggan: pelanggan,
+        keranjang: keranjang // Mengirimkan seluruh array objek keranjang belanja aktif
+    })
+}).then(() => {
+    alert(`Transaksi ${idTrx} Berhasil Disimpan ke Google Sheets!`);
+    if (siapPrint) { window.print(); }
+    
+    // Reset Formulir setelah sukses
+    keranjang = [];
+    document.getElementById('namaPelanggan').value = "Umum";
+    document.getElementById('jumlahBayar').value = "";
+    generateIDTransaksi();
+    renderKeranjang();
+}).catch(err => {
+    alert("Gagal mengirim data ke Google Sheets, periksa koneksi.");
+    console.error(err);
+});
     }
 </script>
 </body>
