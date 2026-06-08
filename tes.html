@@ -321,72 +321,70 @@
         }
     }
 
-    function cariBarang() {
-        const keyword = document.getElementById('searchBarang').value.toLowerCase();
-        const tbody = document.getElementById('hasilCariBody');
-        tbody.innerHTML = "";
+    // PERBAIKAN 1: Menggunakan Indeks Array Global agar tidak mungkin tertukar
+function cariBarang() {
+    const keyword = document.getElementById('searchBarang').value.toLowerCase();
+    const tbody = document.getElementById('hasilCariBody');
+    tbody.innerHTML = "";
 
-        const hasilFilter = databaseBarangMaster.filter(b => 
-            b.nama.toLowerCase().includes(keyword) || b.id.toLowerCase().includes(keyword)
-        ).slice(0, 10);
-
-        if(hasilFilter.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:gray;">Barang tidak ditemukan.</td></tr>`;
-            return;
+    // Kita cari barang yang cocok, tapi kita simpan juga posisi indeks aslinya
+    const hasilFilter = [];
+    for (let i = 0; i < databaseBarangMaster.length; i++) {
+        let b = databaseBarangMaster[i];
+        if (b.nama.toLowerCase().includes(keyword) || b.id.toLowerCase().includes(keyword)) {
+            hasilFilter.push({ barang: b, indeksAsli: i });
         }
-
-        hasilFilter.forEach(b => {
-            let row = `<tr>
-                <td>${b.id}</td>
-                <td><strong>${b.nama}</strong></td>
-                <td>${b.satuan}</td>
-                <td>Rp ${b.harga.toLocaleString('id-ID')}</td>
-                <td><button class="btn btn-success" style="padding:4px 8px; font-size:12px; width:auto;" onclick="tambahKeKeranjang('${b.id}')">+ Tambah</button></td>
-            </tr>`;
-            tbody.innerHTML += row;
-        });
+        if (hasilFilter.length >= 10) break; // Batasi maksimal 10 baris di layar
     }
 
-    // PERBAIKAN UTAMA: Mencari ID dengan tipe data String yang konsisten
-    
-    function tambahKeKeranjang(id) {
-    // 1. Cari barang di database master berdasarkan ID
-    const barang = databaseBarangMaster.find(b => String(b.id).trim() === String(id).trim());
-    
-    if (!barang) {
-        alert("Sistem gagal menemukan data barang dengan ID: " + id);
+    if (hasilFilter.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:gray;">Barang tidak ditemukan.</td></tr>`;
         return;
     }
 
-    // 2. KUNCI PERBAIKAN: Cek apakah barang SUDAH ADA di keranjang
-    // Kita cek berdasarkan ID, tapi jika ID-nya kosong/sama, kita cek berdasarkan NAMA BARANG agar tidak bentrok
-    const itemAda = keranjang.find(item => {
-        if (item.id && item.id !== "undefined" && item.id !== "") {
-            return String(item.id).trim() === String(barang.id).trim();
-        } else {
-            return String(item.nama).trim() === String(barang.nama).trim();
-        }
+    // Tampilkan ke tabel. Perhatikan bagian: tambahKeKeranjangByIndeks(${item.indeksAsli})
+    hasilFilter.forEach(item => {
+        let b = item.barang;
+        let row = `<tr>
+            <td>${b.id || '-'}</td>
+            <td><strong>${b.nama}</strong></td>
+            <td>${b.satuan || '-'}</td>
+            <td>Rp ${Number(b.harga).toLocaleString('id-ID')}</td>
+            <td><button class="btn btn-success" style="padding:4px 8px; font-size:12px; width:auto;" onclick="tambahKeKeranjangByIndeks(${item.indeksAsli})">+ Tambah</button></td>
+        </tr>`;
+        tbody.innerHTML += row;
     });
+}
 
-    // 3. Jika barang sudah ada di keranjang, cukup tambahkan Qty
+// PERBAIKAN 2: Fungsi Baru Menambahkan Barang Berdasarkan Posisi Indeks Pasti
+function tambahKeKeranjangByIndeks(indeks) {
+    const barangSelected = databaseBarangMaster[indeks];
+    
+    if (!barangSelected) {
+        alert("Sistem gagal mengambil data barang.");
+        return;
+    }
+
+    // Cek apakah barang dengan NAMA yang sama sudah ada di keranjang
+    const itemAda = keranjang.find(item => String(item.nama).trim() === String(barangSelected.nama).trim());
+
     if (itemAda) {
+        // Jika namanya sama, baru naikkan Qty
         itemAda.qty++;
         itemAda.subtotal = itemAda.qty * itemAda.harga;
-        console.log("Barang sama dideteksi, menambahkan Qty untuk:", itemAda.nama);
     } else {
-        // 4. JIKA BARANG BARU (Belum ada di keranjang), TAMBAHKAN BARIS BARU
+        // Jika namanya berbeda, WAJIB buat baris baru di keranjang
         keranjang.push({
-            id: barang.id,
-            nama: barang.nama,
-            harga: barang.harga,
+            id: barangSelected.id,
+            nama: barangSelected.nama,
+            harga: barangSelected.harga,
             qty: 1,
-            satuan: barang.satuan,
-            subtotal: barang.harga
+            satuan: barangSelected.satuan,
+            subtotal: barangSelected.harga
         });
-        console.log("Barang baru ditambahkan ke keranjang:", barang.nama);
     }
     
-    // Refresh tampilan tabel keranjang
+    // Refresh tabel keranjang belanja
     renderKeranjang();
 }
 
