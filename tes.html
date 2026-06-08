@@ -202,9 +202,11 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="namaPelanggan">Nama Pelanggan / Kontraktor</label>
-                    <input type="text" id="namaPelanggan" value="Umum">
-                </div>
+    <label for="namaPelanggan">Nama Pelanggan / Kontraktor</label>
+    <select id="namaPelanggan">
+        <option value="Umum">Memuat daftar pelanggan...</option>
+    </select>
+</div>
 
                 <div class="form-group">
                     <label for="jenisPembayaran">Jenis Pembayaran</label>
@@ -276,7 +278,7 @@
 
 <script>
     // Taruh URL Google Apps Script Web App Anda di sini
-    const URL_API_SHEETS = "https://script.google.com/macros/s/AKfycbz-4F8wga_rPMDzAuqgA98d4DTGKiUqQE71zgS4_Xh-nhRbKo7KhxhDXGG988j9vbWQ/exec";
+    const URL_API_SHEETS = "https://script.google.com/macros/s/AKfycbw2slR6Zwszb_qhtfvZoNKNMcMb_-0ik6hOph5KDxrCEU55DXccnJ-uYTGEPRTPO6Bn/exec";
 
     let databaseBarangMaster = [];
     let keranjang = [];
@@ -300,26 +302,44 @@
     }
 
     async function muatDataDariGoogleSheets() {
-        const tbody = document.getElementById('hasilCariBody');
-        try {
-            const response = await fetch(URL_API_SHEETS);
-            const dataAsli = await response.json();
-            
-            // KUNCI PERBAIKAN: Memastikan data dipetakan dengan benar & aman dari huruf besar/kecil
-            databaseBarangMaster = dataAsli.map(item => ({
-                id: String(item.id || item.ID || ''),
-                nama: String(item.nama || item.Nama || item.nama_barang || ''),
-                satuan: String(item.satuan || item.Satuan || ''),
-                harga: Number(item.harga || item.Harga || item.harga_jual || 0),
-                stok: Number(item.stok || item.Stok || 0)
-            }));
-            
-            cariBarang(); 
-        } catch (error) {
-            console.error("Gagal memuat data:", error);
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Gagal memuat database Google Sheets.</td></tr>`;
+    const tbody = document.getElementById('hasilCariBody');
+    const selectPelanggan = document.getElementById('namaPelanggan');
+    
+    try {
+        const response = await fetch(URL_API_SHEETS);
+        const paketData = await response.json(); // Menerima paket berisi { produk: [...], pelanggan: [...] }
+        
+        // 1. Petakan data barang ke database lokal browser
+        databaseBarangMaster = paketData.produk.map(item => ({
+            id: String(item.id || ''),
+            nama: String(item.nama || ''),
+            satuan: String(item.satuan || ''),
+            harga: Number(item.harga || 0),
+            stok: Number(item.stok || 0)
+        }));
+        
+        // 2. Masukkan data pelanggan ke dalam Dropdown Select
+        selectPelanggan.innerHTML = ""; // Bersihkan teks memuat
+        
+        if (paketData.pelanggan && paketData.pelanggan.length > 0) {
+            paketData.pelanggan.forEach(plg => {
+                let opsi = document.createElement('option');
+                opsi.value = plg.nama; // Nilai nama yang akan dikirim ke Google Sheets
+                opsi.innerText = plg.nama; // Teks yang muncul di layar kasir
+                selectPelanggan.appendChild(opsi);
+            });
+        } else {
+            selectPelanggan.innerHTML = `<option value="Umum">Umum</option>`;
         }
+        
+        // Jalankan pencarian default awal
+        cariBarang(); 
+    } catch (error) {
+        console.error("Gagal memuat data:", error);
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Gagal memuat database Google Sheets.</td></tr>`;
+        selectPelanggan.innerHTML = `<option value="Umum">Umum (Gagal memuat data asli)</option>`;
     }
+}
 
     // PERBAIKAN 1: Menggunakan Indeks Array Global agar tidak mungkin tertukar
 function cariBarang() {
