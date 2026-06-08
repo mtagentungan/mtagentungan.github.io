@@ -409,48 +409,69 @@ function tambahKeKeranjangByIndeks(indeks) {
 }
 
 
-    function ubahQty(id, qtyBaru) {
-        const item = keranjang.find(item => String(item.id) === String(id));
-        if (item) {
-            item.qty = parseInt(qtyBaru) || 1;
-            item.subtotal = item.qty * item.harga;
-            renderKeranjang();
-        }
+    // PERBAIKAN 1: Render Keranjang menggunakan INDEKS LOOPING (i) agar input Qty tepat sasaran
+function renderKeranjang() {
+    const tbody = document.getElementById('keranjangBody');
+    tbody.innerHTML = "";
+    totalBayar = 0;
+
+    if (keranjang.length === 0) {
+        document.getElementById('emptyCartMessage').style.display = "block";
+        document.getElementById('totalBayarBox').innerText = "Rp 0";
+        return;
+    }
+    document.getElementById('emptyCartMessage').style.display = "none";
+
+    // Gunakan parameter FOR dengan indeks 'i' untuk menandai posisi baris di keranjang
+    for (let i = 0; i < keranjang.length; i++) {
+        let item = keranjang[i];
+        totalBayar += item.subtotal;
+        
+        // KUNCI PERBAIKAN: ubahQtyByIndeks(${i}, this.value) dan hapusItemByIndeks(${i})
+        let row = `<tr>
+            <td><strong>${item.nama}</strong></td>
+            <td>Rp ${item.harga.toLocaleString('id-ID')}</td>
+            <td>
+                <input type="number" value="${item.qty}" min="1" style="width:60px; padding:4px;" 
+                       onchange="ubahQtyByIndeks(${i}, this.value)">
+            </td>
+            <td>${item.satuan}</td>
+            <td>Rp ${item.subtotal.toLocaleString('id-ID')}</td>
+            <td>
+                <button onclick="hapusItemByIndeks(${i})" 
+                        style="background:red; color:white; border:none; border-radius:4px; padding:2px 6px; cursor:pointer;">X</button>
+            </td>
+        </tr>`;
+        tbody.innerHTML += row;
     }
 
-    function hapusItem(id) {
-        keranjang = keranjang.filter(item => String(item.id) !== String(id));
+    document.getElementById('totalBayarBox').innerText = "Rp " + totalBayar.toLocaleString('id-ID');
+    hitungKembalian();
+}
+
+// PERBAIKAN 2: Fungsi Ubah Qty Baru Berdasarkan Posisi Baris Pasti (Indeks)
+function ubahQtyByIndeks(indeks, qtyBaru) {
+    const item = keranjang[indeks];
+    if (item) {
+        let qtyAngka = parseInt(qtyBaru) || 1;
+        if (qtyAngka < 1) qtyAngka = 1; // Proteksi agar tidak bisa minus atau 0
+        
+        item.qty = qtyAngka;
+        item.subtotal = item.qty * item.harga;
+        
+        // Terapkan perubahan dan hitung ulang total
         renderKeranjang();
     }
+}
 
-    function renderKeranjang() {
-        const tbody = document.getElementById('keranjangBody');
-        tbody.innerHTML = "";
-        totalBayar = 0;
-
-        if (keranjang.length === 0) {
-            document.getElementById('emptyCartMessage').style.display = "block";
-            document.getElementById('totalBayarBox').innerText = "Rp 0";
-            return;
-        }
-        document.getElementById('emptyCartMessage').style.display = "none";
-
-        keranjang.forEach(item => {
-            totalBayar += item.subtotal;
-            let row = `<tr>
-                <td><strong>${item.nama}</strong></td>
-                <td>Rp ${item.harga.toLocaleString('id-ID')}</td>
-                <td><input type="number" value="${item.qty}" min="1" style="width:60px; padding:4px;" onchange="ubahQty('${item.id}', this.value)"></td>
-                <td>${item.satuan}</td>
-                <td>Rp ${item.subtotal.toLocaleString('id-ID')}</td>
-                <td><button onclick="hapusItem('${item.id}')" style="background:red; color:white; border:none; border-radius:4px; padding:2px 6px; cursor:pointer;">X</button></td>
-            </tr>`;
-            tbody.innerHTML += row;
-        });
-
-        document.getElementById('totalBayarBox').innerText = "Rp " + totalBayar.toLocaleString('id-ID');
-        hitungKembalian();
-    }
+// PERBAIKAN 3: Fungsi Hapus Item Baru Berdasarkan Posisi Baris Pasti (Indeks)
+function hapusItemByIndeks(indeks) {
+    // Hapus 1 item tepat pada posisi indeks yang diklik
+    keranjang.splice(indeks, 1);
+    
+    // Refresh tampilan keranjang
+    renderKeranjang();
+}
 
     function toggleKreditInfo() {
         const jenis = document.getElementById('jenisPembayaran').value;
