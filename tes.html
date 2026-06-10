@@ -130,6 +130,15 @@
             .invoice-footer { margin-top: 50px; display: table; width: 100%; text-align: center; }
             .signature-box { display: table-cell; width: 50%; }
         }
+
+@media print {
+    .no-print-button { display: none !important; }
+    /* Jika sedang cetak laporan, sembunyikan nota kasir biasa */
+    body.cetak-laporan #printArea { display: none !important; }
+    body.cetak-laporan #printLaporanArea { display: block !important; visibility: visible !important; }
+    body.cetak-laporan #printLaporanArea * { visibility: visible !important; }
+}
+
     </style>
 </head>
 <body>
@@ -140,6 +149,16 @@
             <h1>TB. KHIZANATULLAH</h1>
             <small>ANDA BELANJA... ANDA BERAMAL...!!!</small>
         </div>
+        <!-- Penambahan Tombol Akses Laporan -->
+        <div style="margin-top: 10px; display: flex; gap: 10px;" class="no-print-button">
+            <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px; width: auto; background-color: #f59e0b;" onclick="cetakLaporanPelanggan()">
+                📊 Cetak Laporan Per Pelanggan
+            </button>
+            <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px; width: auto; background-color: #10b981;" onclick="cetakLaporanMingguan()">
+                📅 Cetak Laporan Pekan Ini
+            </button>
+        </div>
+
         <div id="clock" style="font-weight: 600;"></div>
     </header>
 
@@ -568,6 +587,141 @@ fetch(URL_API_SHEETS, {
     console.error(err);
 });
     }
+// Array penampung riwayat transaksi lokal (setiap kali klik simpan, otomatis mencatat ke sini)
+let historiSemuaTransaksi = []; 
+
+// Modifikasi fungsi bawaan Anda pada bagian sukses fetch, tambahkan baris untuk mencatat histori:
+// Di dalam fungsi prosesTransaksi() Anda, sebelum mereset formulir, masukkan kode ini:
+/* 
+historiSemuaTransaksi.push({
+    id_transaksi: idTrx,
+    waktu: waktuTrx,
+    total_bayar: totalBayar,
+    jenis_pembayaran: jenisBayar,
+    pelanggan: pelanggan
+});
+*/
+
+// 1. FUNGSI LAPORAN TIAP PELANGGAN
+function cetakLaporanPelanggan() {
+    const pelangganDipilih = document.getElementById('namaPelanggan').value;
+    
+    // Filter transaksi yang nama pelanggannya cocok dengan dropdown aktif
+    const dataFilter = historiSemuaTransaksi.filter(t => t.pelanggan === pelangganDipilih);
+    
+    document.getElementById('laporanJudul').innerText = "LAPORAN PENJUALAN PER PELANGGAN";
+    document.getElementById('laporanSubjudul').innerText = "Nama Pelanggan / Kontraktor: " + pelangganDipilih;
+    
+    buildLaporanTable(dataFilter);
+}
+
+// 2. FUNGSI LAPORAN TIAP PEKAN (7 Hari Terakhir)
+function cetakLaporanMingguan() {
+    const sekarang = new Date();
+    const tujuhHariLalu = new Date();
+    tujuhHariLalu.setDate(sekarang.getDate() - 7);
+    
+    // Filter transaksi yang masuk rentang 7 hari terakhir
+    const dataFilter = historiSemuaTransaksi.filter(t => {
+        // Asumsi format t.waktu berupa string tanggal valid lokal atau objek tanggal
+        // Kita ubah string "DD/MM/YYYY" atau timestamp transaksi menjadi objek Date resmi untuk dibandingkan
+        const parts = t.waktu.split(',')[0].split('/'); // Mengurai format id-ID "DD/MM/YYYY"
+        if(parts.length === 3) {
+            const tanggalTrx = new Date(parts[2], parts[1] - 1, parts[0]);
+            return tanggalTrx >= tujuhHariLalu && tanggalTrx <= sekarang;
+        }
+        return true; // Cadangan fallback
+    });
+
+    document.getElementById('laporanJudul').innerText = "LAPORAN PENJUALAN MINGGUAN (7 HARI TERAKHIR)";
+    document.getElementById('laporanSubjudul').innerText = "Periode: " + tujuhHariLalu.toLocaleDateString('id-ID') + " s/d " + sekarang.toLocaleDateString('id-ID');
+    
+    buildLaporanTable(dataFilter);
+}
+
+// 3. SEBAGAI JEMBATAN MERENDER TABEL DAN MENANDAI BODY CETAK
+function buildLaporanTable(data) {
+    const tbody = document.getElementById('laporanTableBody');
+    tbody.innerHTML = "";
+    let totalOmzet = 0;
+
+    if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; border: 1px solid #000; padding:15px;">Tidak ada riwayat transaksi ditemukan untuk laporan ini.</td></tr>`;
+        document.getElementById('laporanTotalAkhir').innerText = "Rp 0";
+        alert("Data transaksi untuk laporan ini kosong!");
+        return;
+    }
+
+    data.forEach((t, index) => {
+        totalOmzet += Number(t.total_bayar);
+        let row = `<tr>
+            <td style="text-align:center; border: 1px solid #000; padding:8px;">${index + 1}</td>
+            <td style="border: 1px solid #000; padding:8px;">${t.id_transaksi}</td>
+            <td style="border: 1px solid #000; padding:8px;">${t.waktu}</td>
+            <td style="border: 1px solid #000; padding:8px;">${t.pelanggan}</td>
+            <td style="text-align:center; border: 1px solid #000; padding:8px;">${t.jenis_pembayaran}</td>
+            <td style="text-align:right; border: 1px solid #000; padding:8px;">Rp ${Number(t.total_bayar).toLocaleString('id-ID')}</td>
+        </tr>`;
+        tbody.innerHTML += row;
+    });
+
+    document.getElementById('laporanTotalAkhir').innerText = "Rp " + totalOmzet.toLocaleString('id-ID');
+    
+    // Beri tanda pada body bahwa kita sedang mencetak laporan, bukan nota belanja biasa
+    document.body.classList.add('cetak-laporan');
+    
+    // Picu fungsi cetak printer bawaan komputer
+    window.print();
+    
+    // Hapus kembali tanda kelas setelah proses cetak selesai agar aplikasi normal kembali
+    setTimeout(() => {
+        document.body.classList.remove('cetak-laporan');
+    }, 1000);
+}
+
 </script>
+
+<!-- ================= AREA CETAK LAPORAN FORMAL (TERSEMBUNYI DI LAYAR) ================= -->
+<div id="printLaporanArea" style="display: none;">
+    <div class="invoice-header">
+        <h2 id="laporanJudul">LAPORAN PENJUALAN RESMI</h2>
+        <div style="font-size: 16px; font-weight: bold; margin-top: 5px;">TOKO BAHAN BANGUNAN UTAMA</div>
+        <div id="laporanSubjudul" style="font-size: 14px; margin-top: 5px; font-style: italic;"></div>
+    </div>
+
+    <table class="print-table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+        <thead>
+            <tr>
+                <th style="width: 5%; text-align: center; border: 1px solid #000; padding: 8px;">No</th>
+                <th style="width: 20%; border: 1px solid #000; padding: 8px;">No. Transaksi</th>
+                <th style="width: 25%; border: 1px solid #000; padding: 8px;">Waktu / Tanggal</th>
+                <th style="width: 20%; border: 1px solid #000; padding: 8px;">Pelanggan</th>
+                <th style="width: 15%; text-align: center; border: 1px solid #000; padding: 8px;">Metode</th>
+                <th style="width: 15%; text-align: right; border: 1px solid #000; padding: 8px;">Total Omzet</th>
+            </tr>
+        </thead>
+        <tbody id="laporanTableBody">
+            <!-- Data laporan akan diisi secara dinamis oleh JavaScript -->
+        </tbody>
+    </table>
+
+    <div class="print-total" style="text-align: right; font-weight: bold; font-size: 18px; margin-top: 25px; border-top: 2px solid #000; padding-top: 10px;">
+        TOTAL PENDAPATAN: <span id="laporanTotalAkhir">Rp 0</span>
+    </div>
+
+    <div class="invoice-footer" style="margin-top: 60px; display: table; width: 100%; text-align: center;">
+        <div class="signature-box" style="display: table-cell; width: 50%;">
+            <p>Diperiksa Oleh, Admin</p>
+            <br><br><br>
+            <p>( _______________________ )</p>
+        </div>
+        <div class="signature-box" style="display: table-cell; width: 50%;">
+            <p>Mengetahui, Pemilik Toko</p>
+            <br><br><br>
+            <p>( _______________________ )</p>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
