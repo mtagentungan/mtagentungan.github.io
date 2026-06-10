@@ -13,11 +13,24 @@
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         
         /* Pengaturan Khusus untuk Printer Thermal 57mm */
-        @media print {
-            body { width: 57mm; font-size: 12px; }
-            button, .no-print { display: none; }
-            table { width: 100%; }
-        }
+        /* Pengaturan Khusus untuk Printer Thermal 57mm */
+@media print {
+    body { 
+        width: 57mm; 
+        font-size: 20px; /* Memperbesar ukuran font */
+        font-weight: bold; /* Menebalkan tulisan agar lebih jelas */
+    }
+    .no-print { display: none; }
+    table { 
+        width: 100%; 
+        border-collapse: collapse; 
+    }
+    th, td { 
+        padding: 5px 2px; /* Mengurangi padding agar pas di kertas kecil */
+        border: none; /* Menghilangkan garis tabel agar lebih profesional */
+    }
+}
+
     </style>
 </head>
 <body>
