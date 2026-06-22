@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadwal Piket Cabang Gentungan</title>
+    <style>
+        :root {
+            --primary-color: #24292e;
+            --accent-color: #0366d6;
+            --bg-color: #f6f8fa;
+            --border-color: #e1e4e8;
+            --weekend-bg: #fffbdd;
+            --text-color: #24292e;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        }
+        h1 {
+            font-size: 24px;
+            color: var(--primary-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-top: 0;
+            text-align: center;
+        }
+        .filter-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            background: #f1f8ff;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #c8e1ff;
+        }
+        .filter-item {
+            flex: 1;
+            min-width: 150px;
+        }
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #586069;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: #fff;
+        }
+        .table-container {
+            overflow-x: auto;
+            max-height: 650px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        th {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        tr:hover {
+            background-color: #f1f8ff;
+        }
+        .weekend-row {
+            background-color: var(--weekend-bg);
+        }
+        .empty {
+            color: #a3a3a3;
+            font-style: italic;
+        }
+        .no-data {
+            text-align: center;
+            padding: 30px;
+            color: #586069;
+            font-style: italic;
+            display: none;
+        }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            th, td { padding: 8px; font-size: 14px; }
+            .filter-group { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Jadwal Piket Cabang Gentungan</h1>
+    
+    <!-- Bagian Filter Kebisingan -->
+    <div class="filter-group">
+        <div class="filter-item">
+            <label for="filterTahun">Tahun</label>
+            <select id="filterTahun" class="form-control" onchange="renderJadwal()">
+                <!-- Opsi Tahun Terbuat Otomatis Lewat JavaScript -->
+            </select>
+        </div>
+        <div class="filter-item">
+            <label for="filterBulan">Bulan</label>
+            <select id="filterBulan" class="form-control" onchange="renderJadwal()">
+                <option value="0">Januari</option>
+                <option value="1">Februari</option>
+                <option value="2">Maret</option>
+                <option value="3">April</option>
+                <option value="4">Mei</option>
+                <option value="5">Juni</option>
+                <option value="6">Juli</option>
+                <option value="7">Agustus</option>
+                <option value="8">September</option>
+                <option value="9">Oktober</option>
+                <option value="10">November</option>
+                <option value="11">Desember</option>
+            </select>
+        </div>
+        <div class="filter-item" style="flex: 2; min-width: 220px;">
+            <label for="searchNama">Cari Nama Petugas / Hari</label>
+            <input type="text" id="searchNama" class="form-control" onkeyup="renderJadwal()" placeholder="Ketik nama petugas atau nama hari...">
+        </div>
+    </div>
+
+    <!-- Bagian Tabel Jadwal -->
+    <div class="table-container">
+        <table id="piketTable">
+            <thead>
+                <tr>
+                    <th>Tanggal</th>
+                    <th>Hari</th>
+                    <th>Pagi</th>
+                    <th>Siang</th>
+                    <th>Malam</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- Data baris dihasilkan secara dinamis oleh JavaScript -->
+            </tbody>
+        </table>
+        <div id="noDataMessage" class="no-data">Data tidak ditemukan untuk pencarian atau filter tersebut.</div>
+    </div>
+</div>
+
+<script>
+// Data Master Siklus 21 Hari Berulang
+const masterSiklus = [
+    {pagi: "Sugiarto Sidodadi", siang: "Mariman", malam: "Purwadi, Aris"},
+    {pagi: "Triono", siang: "Suwono", malam: "Suyatno Sidodadi, Kaswandi"},
+    {pagi: "Slamet Karyono", siang: "Suradi Kwagean", malam: "Edi Karanggayam, Sumarno Kwagean"},
+    {pagi: "Sutarno Gadon", siang: "Sadiyo", malam: "Sartono Kwagean, Sukatmo"},
+    {pagi: "Mulyadi", siang: "Giyatno", malam: "Sunarno Bancak, Kelompok Mojogedang"},
+    {pagi: "Wagiyo Kwagean", siang: "Luhur", malam: "Suroto, Suparno"},
+    {pagi: "Suwarno Kwagean", siang: "Heri", malam: "Sukidi Bancak, Subandi"},
+    {pagi: "-", siang: "Suyatno", malam: "Luthfi, Sutarso"},
+    {pagi: "Atmo Giman", siang: "Darto Kwagean", malam: "Sadino, Yunianto"},
+    {pagi: "Karjono", siang: "Maryono Sidodadi", malam: "Abdul Rozaq, Suyatno Poto"},
+    {pagi: "Suwardi A", siang: "Yoso Karanggayam", malam: "Supriyono, Suhardi"},
+    {pagi: "Mariyo", siang: "Darto/Deni", malam: "Patwinoto, Munawar"},
+    {pagi: "-", siang: "-", malam: "Sudiro/Doni, Widodo Karanggayam"},
+    {pagi: "Qosim", siang: "Heru kwagean", malam: "Ngadiman, Sukino Kwagean"},
+    {pagi: "Wawan", siang: "Sularno Bendo", malam: "Suratno Banaran, Sutarno Karanggayam"},
+    {pagi: "Harmoko", siang: "Parlan", malam: "Pipit, Sumarno kcl"},
+    {pagi: "Sumardi", siang: "Yoso Kwagean", malam: "Sutarno Kwagean, Sukino Karanggayam"},
+    {pagi: "Marjono", siang: "Suharno", malam: "Suwarno Pojok, Sunardi"},
+    {pagi: "Sutarman", siang: "Purwono", malam: "Tarjo, Nugroho"},
+    {pagi: "Supar Keagean", siang: "Haryanto", malam: "Sunarto bancak, Giono Sidodadi"},
+    {pagi: "Atmo Slamet", siang: "Suwarto Keagean", malam: "Sutarno Karanggayam, Abdul Wahab"}
+];
+
+// Titik Acuan Awal Siklus (Index 0 = 18 Mei 2026)
+const tanggalAwalSiklus = new Date(2026, 4, 18); // Note: Bulan di JS dimulai dari 0 (4 = Mei)
+
+const namaHari = ["Ahad", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+const namaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+// Inisialisasi Pilihan Tahun di Dropdown (Mulai 2026 s/d 2030, bisa ditambah sesuka hati)
+function inisialisasiTahun() {
+    const selectTahun = document.getElementById("filterTahun");
+    const tahunSekarang = new Date().getFullYear();
+    
+    for (let tahun = 2026; tahun <= 2032; tahun++) {
+        let opt = document.createElement("option");
+        opt.value = tahun;
+        opt.innerHTML = tahun;
+        if (tahun === tahunSekarang) opt.selected = true; // Otomatis mengarah ke tahun berjalan saat ini
+        selectTahun.appendChild(opt);
+    }
+    
+    // Set default bulan ke bulan berjalan saat ini
+    document.getElementById("filterBulan").value = new Date().getMonth();
+}
+
+// Fungsi Inti untuk Menghasilkan Data & Memfilternya
+function renderJadwal() {
+    const tahunTerpilih = parseInt(document.getElementById("filterTahun").value);
+    const bulanTerpilih = parseInt(document.getElementById("filterBulan").value);
+    const kataKunci = document.getElementById("searchNama").value.toUpperCase();
+    const tableBody = document.getElementById("tableBody");
+    const noDataMessage = document.getElementById("noDataMessage");
+    
+    tableBody.innerHTML = ""; // Bersihkan tabel terlebih dahulu
+    
+    // Dapatkan tanggal pertama dan terakhir dari bulan/tahun yang dipilih pengguna
+    const tanggalAwalBulan = new Date(tahunTerpilih, bulanTerpilih, 1);
+    const tanggalAkhirBulan = new Date(tahunTerpilih, bulanTerpilih + 1, 0); // Angka 0 menghasilkan hari terakhir bulan sebelumnya
+    
+    let barisDitemukan = 0;
+
+    // Lakukan perulangan hari demi hari khusus pada bulan tersebut saja
+    for (let d = new Date(tanggalAwalBulan); d <= tanggalAkhirBulan; d.setDate(d.getDate() + 1)) {
+        
+        // Lewati tanggal jika berada sebelum tanggal awal sejarah siklus (18 Mei 2026)
+        if (d < tanggalAwalSiklus) continue;
+
+        // Hitung selisih hari dari titik acuan untuk menentukan index siklus ke berapa
+        const selisihMilidetik = d.getTime() - tanggalAwalSiklus.getTime();
+        const selisihHari = Math.floor(selisihMilidetik / (1000 * 60 * 60 * 24));
+        
+        // Gunakan fungsi Modulo (%) 21 agar siklus terus berputar kembali ke 0 setelah hari ke-21
+        const indexSiklus = selisihHari % 21;
+        const petugas = masterSiklus[indexSiklus];
+        
+        // Format Teks Tampilan
+        const hariText = namaHari[d.getDay()];
+        const tanggalText = `${String(d.getDate()).padStart(2, '0')} ${namaBulan[d.getMonth()]} ${d.getFullYear()}`;
+        
+        const pagiText = petugas.pagi === "-" ? "<span class='empty'>- Kosong -</span>" : petugas.pagi;
+        const siangText = petugas.siang === "-" ? "<span class='empty'>- Kosong -</span>" : petugas.siang;
+        const malamText = petugas.malam === "-" ? "<span class='empty'>- Kosong -</span>" : petugas.malam;
+        
+        // Cek filter pencarian teks (apakah ada nama/hari yang cocok)
+        const kontenGabungan = `${hariText} ${petugas.pagi} ${petugas.siang} ${petugas.malam}`.toUpperCase();
+        
+        if (kataKunci === "" || kontenGabungan.includes(kataKunci)) {
+            // Tentukan style warna baris untuk hari Sabtu & Ahad (Weekend)
+            const isWeekend = (d.getDay() === 0 || d.getDay() === 6) ? "class='weekend-row'" : "";
+            
+            const rowHTML = `
+                <tr ${isWeekend}>
+                    <td>${tanggalText}</td>
+                    <td><strong>${hariText}</strong></td>
+                    <td>${pagiText}</td>
+                    <td>${siangText}</td>
+                    <td>${malamText}</td>
+                </tr>
+            `;
+            tableBody.insertAdjacentHTML("beforeend", rowHTML);
+            barisDitemukan++;
+        }
+    }
+    
+    // Tampilkan notifikasi jika hasil pencarian kosong
+    if (barisDitemukan === 0) {
+        noDataMessage.style.display = "block";
+    } else {
+        noDataMessage.style.display = "none";
+    }
+}
+
+// Jalankan fungsi otomatis saat halaman web pertama kali dibuka
+window.onload = function() {
+    inisialisasiTahun();
+    renderJadwal();
+};
+</script>
+
+</body>
+</html>
