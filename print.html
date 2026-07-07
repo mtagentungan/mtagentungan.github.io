@@ -62,31 +62,51 @@
     </table>
 
     <script>
-        function formatRupiah(angka) {
-            return new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0
-            }).format(angka);
-        }
+    // 1. Tambahkan array untuk menampung data
+    let daftarBarang = [];
 
-        function tambahBarang() {
-            let nama = document.getElementById('namaBarang').value;
-            let harga = document.getElementById('hargaBarang').value;
+    function formatRupiah(angka) {
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            minimumFractionDigits: 0
+        }).format(angka);
+    }
 
-            if(nama && harga) {
-                let table = document.getElementById('isiTabel');
-                let row = table.insertRow();
-                row.insertCell(0).innerHTML = nama;
-                row.insertCell(1).innerHTML = formatRupiah(harga);
-                
-                // Reset input
-                document.getElementById('namaBarang').value = '';
-                document.getElementById('hargaBarang').value = '';
-            } else {
-                alert("Mohon isi nama dan harga!");
-            }
+    function tambahBarang() {
+        let nama = document.getElementById('namaBarang').value;
+        let harga = document.getElementById('hargaBarang').value;
+
+        if(nama && harga) {
+            // 2. Masukkan data ke dalam array
+            daftarBarang.push({ nama: nama, harga: parseInt(harga) });
+
+            // 3. Urutkan berdasarkan nama (A-Z)
+            daftarBarang.sort((a, b) => a.nama.localeCompare(b.nama));
+
+            // 4. Update tabel
+            renderTabel();
+            
+            // Reset input
+            document.getElementById('namaBarang').value = '';
+            document.getElementById('hargaBarang').value = '';
+        } else {
+            alert("Mohon isi nama dan harga!");
         }
-    </script>
+    }
+
+    // 5. Fungsi untuk menggambar ulang tabel
+    function renderTabel() {
+        let table = document.getElementById('isiTabel');
+        table.innerHTML = ""; // Bersihkan tabel terlebih dahulu
+
+        daftarBarang.forEach(item => {
+            let row = table.insertRow();
+            row.insertCell(0).innerHTML = item.nama;
+            row.insertCell(1).innerHTML = formatRupiah(item.harga);
+        });
+    }
+</script>
+
 </body>
 </html>
