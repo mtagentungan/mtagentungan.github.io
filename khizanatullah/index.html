@@ -38,34 +38,56 @@
 
 <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMcJLY-2btGvN5zyvqcsRZDMlTQInR2SGxF3JdAVhLHgDoYVumzykr13DguA9gNPE/exec';
-    let dataBarang = []; // Variabel untuk menyimpan data agar tidak fetch berkali-kali
+    let dataBarang = [];
 
-    // Fungsi Ambil Data (Hanya dijalankan sekali)
     async function init() {
-        try {
-            const res = await fetch(SCRIPT_URL);
-            dataBarang = await res.json();
+        const cachedData = localStorage.getItem('dataBarang');
+        
+        // 1. Cek apakah ada data di cache
+        if (cachedData) {
+            console.log("Memuat data dari cache...");
+            dataBarang = JSON.parse(cachedData);
             renderTable(dataBarang);
-        } catch (err) {
-            alert("Gagal memuat data");
+            
+            // Opsional: Tetap ambil data terbaru di latar belakang (background sync)
+            updateDataFromSheet();
+        } else {
+            // 2. Jika tidak ada cache, ambil dari API
+            updateDataFromSheet();
         }
     }
 
-    // Fungsi untuk menampilkan data ke tabel
+    async function updateDataFromSheet() {
+        try {
+            const res = await fetch(SCRIPT_URL);
+            const newData = await res.json();
+            
+            // Simpan ke localStorage agar bisa diakses saat offline/refresh berikutnya
+            localStorage.setItem('dataBarang', JSON.stringify(newData));
+            
+            dataBarang = newData;
+            renderTable(dataBarang);
+            console.log("Data diperbarui dari Google Sheets.");
+        } catch (err) {
+            if (!localStorage.getItem('dataBarang')) {
+                alert("Gagal memuat data. Periksa koneksi Anda.");
+            }
+        }
+    }
+
     function renderTable(data) {
         const body = document.getElementById('bodyBarang');
-        body.innerHTML = ''; // Bersihkan tabel sebelum diisi ulang
+        body.innerHTML = '';
         data.forEach(item => {
             body.innerHTML += `
                 <tr>
                     <td>${item.nama}</td>
                     <td>Rp ${parseInt(item.harga).toLocaleString('id-ID')}</td>
-                    <td><button>Tambah</button></td>
+                    <td><button onclick="alert('${item.nama} ditambahkan')">Tambah</button></td>
                 </tr>`;
         });
     }
 
-    // Fungsi Pencarian
     function filterBarang() {
         const keyword = document.getElementById('searchBar').value.toLowerCase();
         const filtered = dataBarang.filter(item => 
@@ -76,6 +98,6 @@
 
     window.onload = init;
 </script>
-
+    
 </body>
 </html>
