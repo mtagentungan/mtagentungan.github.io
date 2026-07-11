@@ -3,101 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Kasir</title>
+    <title>Aplikasi Kasir Web</title>
     <style>
-        /* CSS Tambahan untuk Search Bar */
-        #searchBar {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 20px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            box-sizing: border-box;
-        }
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f4f7f6; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        .btn-add { background: #28a745; color: white; border: none; padding: 5px 10px; cursor: pointer; }
+        #areaKeranjang { margin-top: 20px; border-top: 2px solid #eee; padding-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Daftar Menu Barang</h2>
-    
-    <input type="text" id="searchBar" placeholder="Cari nama barang..." onkeyup="filterBarang()">
+    <h2>Daftar Barang</h2>
+    <input type="text" id="searchBar" placeholder="Cari barang..." onkeyup="filterBarang()">
     
     <table id="tabelBarang">
-        <thead>
-            <tr>
-                <th>Nama Barang</th>
-                <th>Harga</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody id="bodyBarang">
-            </tbody>
+        <thead><tr><th>Nama</th><th>Harga</th><th>Aksi</th></tr></thead>
+        <tbody id="bodyBarang"></tbody>
     </table>
+
+    <div id="areaKeranjang">
+        <h3>Keranjang</h3>
+        <ul id="listKeranjang"></ul>
+        <p>Total: <strong id="totalHarga">Rp 0</strong></p>
+    </div>
 </div>
 
 <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMcJLY-2btGvN5zyvqcsRZDMlTQInR2SGxF3JdAVhLHgDoYVumzykr13DguA9gNPE/exec';
     let dataBarang = [];
+    let keranjang = [];
 
+    // Inisialisasi Data
     async function init() {
         const cachedData = localStorage.getItem('dataBarang');
-        
-        // 1. Cek apakah ada data di cache
         if (cachedData) {
-            console.log("Memuat data dari cache...");
             dataBarang = JSON.parse(cachedData);
             renderTable(dataBarang);
-            
-            // Opsional: Tetap ambil data terbaru di latar belakang (background sync)
-            updateDataFromSheet();
+            fetchData(); // Update di latar belakang
         } else {
-            // 2. Jika tidak ada cache, ambil dari API
-            updateDataFromSheet();
+            fetchData();
         }
     }
 
-    async function updateDataFromSheet() {
+    async function fetchData() {
         try {
             const res = await fetch(SCRIPT_URL);
-            const newData = await res.json();
-            
-            // Simpan ke localStorage agar bisa diakses saat offline/refresh berikutnya
-            localStorage.setItem('dataBarang', JSON.stringify(newData));
-            
-            dataBarang = newData;
+            dataBarang = await res.json();
+            localStorage.setItem('dataBarang', JSON.stringify(dataBarang));
             renderTable(dataBarang);
-            console.log("Data diperbarui dari Google Sheets.");
-        } catch (err) {
-            if (!localStorage.getItem('dataBarang')) {
-                alert("Gagal memuat data. Periksa koneksi Anda.");
-            }
-        }
+        } catch (e) { console.error("Gagal ambil data"); }
     }
 
     function renderTable(data) {
         const body = document.getElementById('bodyBarang');
         body.innerHTML = '';
-        data.forEach(item => {
-            body.innerHTML += `
-                <tr>
-                    <td>${item.nama}</td>
-                    <td>Rp ${parseInt(item.harga).toLocaleString('id-ID')}</td>
-                    <td><button onclick="alert('${item.nama} ditambahkan')">Tambah</button></td>
-                </tr>`;
+        data.forEach((item, index) => {
+            body.innerHTML += `<tr>
+                <td>${item.nama}</td>
+                <td>Rp ${parseInt(item.harga).toLocaleString()}</td>
+                <td><button class="btn-add" onclick="tambahKeKeranjang(${index})">Tambah</button></td>
+            </tr>`;
         });
     }
 
     function filterBarang() {
         const keyword = document.getElementById('searchBar').value.toLowerCase();
-        const filtered = dataBarang.filter(item => 
-            item.nama.toLowerCase().includes(keyword)
-        );
+        const filtered = dataBarang.filter(item => item.nama.toLowerCase().includes(keyword));
         renderTable(filtered);
+    }
+
+    function tambahKeKeranjang(index) {
+        // Karena filter bisa mengubah urutan, kita cari berdasarkan nama agar akurat
+        const namaBarang = document.querySelectorAll('#bodyBarang tr')[index].cells[0].innerText;
+        const item = dataBarang.find(b => b.nama === namaBarang);
+        keranjang.push(item);
+        updateKeranjang();
+    }
+
+    function updateKeranjang() {
+        const list = document.getElementById('listKeranjang');
+        list.innerHTML = '';
+        let total = 0;
+        keranjang.forEach((item, i) => {
+            total += parseInt(item.harga);
+            list.innerHTML += `<li>${item.nama} - Rp ${parseInt(item.harga).toLocaleString()} 
+                <button onclick="hapus(${i})">x</button></li>`;
+        });
+        document.getElementById('totalHarga').innerText = `Rp ${total.toLocaleString()}`;
+    }
+
+    function hapus(i) {
+        keranjang.splice(i, 1);
+        updateKeranjang();
     }
 
     window.onload = init;
 </script>
-    
+
 </body>
 </html>
