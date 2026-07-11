@@ -3,64 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Kasir Saya</title>
+    <title>Aplikasi Kasir</title>
     <style>
-        /* Desain Modern & Bersih */
-        :root {
-            --primary-color: #4a90e2;
-            --secondary-color: #f8f9fa;
-            --text-color: #333;
-        }
-
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #e9ecef; 
-            padding: 20px; 
-            color: var(--text-color);
-        }
-
-        .container { 
-            max-width: 800px; 
-            margin: auto; 
-            background: white; 
-            padding: 30px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-        }
-
-        h2 { text-align: center; color: var(--primary-color); }
-
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-top: 20px; 
-        }
-
-        th { background-color: var(--primary-color); color: white; padding: 15px; }
-        
-        td { padding: 12px; border-bottom: 1px solid #ddd; }
-
-        button {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 8px 16px;
+        /* CSS Tambahan untuk Search Bar */
+        #searchBar {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
             border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.3s;
+            box-sizing: border-box;
         }
-
-        button:hover { background-color: #218838; }
-
-        #loading { text-align: center; margin-top: 20px; font-style: italic; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h2>Daftar Menu Barang</h2>
-    <div id="loading">Memuat daftar barang...</div>
-    <table id="tabelBarang" style="display:none;">
+    
+    <input type="text" id="searchBar" placeholder="Cari nama barang..." onkeyup="filterBarang()">
+    
+    <table id="tabelBarang">
         <thead>
             <tr>
                 <th>Nama Barang</th>
@@ -68,32 +31,50 @@
                 <th>Aksi</th>
             </tr>
         </thead>
-        <tbody id="bodyBarang"></tbody>
+        <tbody id="bodyBarang">
+            </tbody>
     </table>
 </div>
 
 <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMcJLY-2btGvN5zyvqcsRZDMlTQInR2SGxF3JdAVhLHgDoYVumzykr13DguA9gNPE/exec';
+    let dataBarang = []; // Variabel untuk menyimpan data agar tidak fetch berkali-kali
 
-    fetch(SCRIPT_URL)
-        .then(response => response.json())
-        .then(data => {
-            const body = document.getElementById('bodyBarang');
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('tabelBarang').style.display = 'table';
+    // Fungsi Ambil Data (Hanya dijalankan sekali)
+    async function init() {
+        try {
+            const res = await fetch(SCRIPT_URL);
+            dataBarang = await res.json();
+            renderTable(dataBarang);
+        } catch (err) {
+            alert("Gagal memuat data");
+        }
+    }
 
-            data.forEach(item => {
-                body.innerHTML += `
-                    <tr>
-                        <td>${item.nama}</td>
-                        <td>Rp ${parseInt(item.harga).toLocaleString('id-ID')}</td>
-                        <td><button onclick="alert('Barang ${item.nama} ditambahkan!')">Tambah</button></td>
-                    </tr>`;
-            });
-        })
-        .catch(err => {
-            document.getElementById('loading').innerText = "Gagal memuat data. Periksa koneksi atau URL GAS Anda.";
+    // Fungsi untuk menampilkan data ke tabel
+    function renderTable(data) {
+        const body = document.getElementById('bodyBarang');
+        body.innerHTML = ''; // Bersihkan tabel sebelum diisi ulang
+        data.forEach(item => {
+            body.innerHTML += `
+                <tr>
+                    <td>${item.nama}</td>
+                    <td>Rp ${parseInt(item.harga).toLocaleString('id-ID')}</td>
+                    <td><button>Tambah</button></td>
+                </tr>`;
         });
+    }
+
+    // Fungsi Pencarian
+    function filterBarang() {
+        const keyword = document.getElementById('searchBar').value.toLowerCase();
+        const filtered = dataBarang.filter(item => 
+            item.nama.toLowerCase().includes(keyword)
+        );
+        renderTable(filtered);
+    }
+
+    window.onload = init;
 </script>
 
 </body>
