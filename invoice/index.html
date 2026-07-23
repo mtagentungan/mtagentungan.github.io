@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Pencatatan Tagihan & Pesanan</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS CDN untuk Export Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; padding: 0; }
+            .print-container { shadow: none; border: none; padding: 0; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8 font-sans">
+
+    <div class="max-w-5xl mx-auto space-y-6">
+
+        <!-- FORM INPUT (NO PRINT) -->
+        <div class="bg-white p-6 rounded-xl shadow-md no-print border border-gray-200">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                ➕ Tambah Item Pesanan / Barang
+            </h2>
+            <form id="orderForm" class="grid grid-cols-1 md:grid-cols-6 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal</label>
+                    <input type="date" id="inputTanggal" required class="w-full border rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Barang</label>
+                    <input type="text" id="inputNama" placeholder="Contoh: SEMEN DINAMIK" required class="w-full border rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">QTY</label>
+                    <input type="number" id="inputQty" min="1" step="any" placeholder="1" required class="w-full border rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Satuan</label>
+                    <input type="text" id="inputSatuan" placeholder="PCS / SAK / KG" required class="w-full border rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 uppercase">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Harga Satuan (Rp)</label>
+                    <input type="number" id="inputHarga" min="0" placeholder="52000" required class="w-full border rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="md:col-span-6 flex gap-2 justify-end mt-2">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded text-sm transition">
+                        + Tambah Barang
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- TOMBOL AKSI (NO PRINT) -->
+        <div class="flex flex-wrap justify-between items-center gap-3 no-print">
+            <div class="flex gap-2">
+                <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded text-sm font-medium flex items-center gap-1">
+                    🖨️ Cetak / Simpan PDF
+                </button>
+                <button onclick="exportToExcel()" class="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded text-sm font-medium flex items-center gap-1">
+                    📊 Export Excel
+                </button>
+            </div>
+            <button onclick="clearAllData()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded text-sm font-medium">
+                🗑️ Hapus Semua Data
+            </button>
+        </div>
+
+        <!-- LAPORAN / NOTA TAGIHAN (PRINT AREA) -->
+        <div class="bg-white p-8 rounded-xl shadow-md print-container border border-gray-200">
+            <!-- HEADER LAPORAN -->
+            <div class="text-center border-b pb-4 mb-6">
+                <h1 class="text-2xl font-black text-gray-900 tracking-wide uppercase">TB KHIZANATULLAH</h1>
+                <p class="text-md font-bold text-gray-700 mt-1" contenteditable="true">
+                    TAGIHAN PERUMAHAN PENJENGUKAN ASRAMA PUTRI 2026
+                </p>
+                <div class="flex justify-between items-center text-xs text-gray-600 mt-4 px-2 font-semibold">
+                    <span contenteditable="true">TANGGAL : 21-27 FEBRUARI 2026</span>
+                    <span contenteditable="true">TAGIHAN KE : 4</span>
+                </div>
+            </div>
+
+            <!-- TABEL PEMBELIAN -->
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-300 text-sm">
+                    <thead>
+                        <tr class="bg-gray-100 uppercase text-xs font-bold text-gray-700">
+                            <th class="border border-gray-300 px-3 py-2 text-center w-28">Tanggal</th>
+                            <th class="border border-gray-300 px-3 py-2 text-left">Nama Barang</th>
+                            <th class="border border-gray-300 px-3 py-2 text-center w-16">QTY</th>
+                            <th class="border border-gray-300 px-3 py-2 text-center w-20">Satuan</th>
+                            <th class="border border-gray-300 px-3 py-2 text-right w-32">Harga (Rp)</th>
+                            <th class="border border-gray-300 px-3 py-2 text-right w-36">Jumlah (Rp)</th>
+                            <th class="border border-gray-300 px-2 py-2 text-center w-12 no-print">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Rows rendered via JS -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-gray-50 font-bold text-gray-900">
+                            <td colspan="5" class="border border-gray-300 px-4 py-2 text-right uppercase">Total :</td>
+                            <td id="grandTotal" class="border border-gray-300 px-3 py-2 text-right text-base text-blue-700">Rp 0</td>
+                            <td class="border border-gray-300 no-print"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- TANDA TANGAN / PENGESAHAN -->
+            <div class="grid grid-cols-2 gap-8 mt-12 text-center text-xs font-semibold text-gray-800">
+                <div>
+                    <p class="mb-16">Penanggungjawab</p>
+                    <p class="underline font-bold" contenteditable="true">Ust. Marjono, S. Th.I.</p>
+                </div>
+                <div>
+                    <p class="mb-16">Kepala TB Khizanatullah</p>
+                    <p class="underline font-bold" contenteditable="true">Muhammad Nur Kholis</p>
+                </div>
+                <div class="col-span-2 mt-4">
+                    <p class="mb-16">Pengawas Keuangan</p>
+                    <p class="underline font-bold" contenteditable="true">Ust. Ikhsan Suparno, S.T.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- LOGIK JAVASCRIPT -->
+    <script>
+        let items = JSON.parse(localStorage.getItem('tb_tagihan_items')) || [
+            { tanggal: '2026-02-21', nama: 'PAKU 5CM', qty: 1, satuan: 'KG', harga: 14000 },
+            { tanggal: '2026-02-21', nama: 'PAKU 7CM', qty: 5, satuan: 'KG', harga: 14000 },
+            { tanggal: '2026-02-23', nama: 'SEMEN DINAMIK', qty: 20, satuan: 'SAK', harga: 52000 }
+        ];
+
+        function formatRupiah(num) {
+            return 'Rp ' + Number(num).toLocaleString('id-ID');
+        }
+
+        function formatDateDisplay(dateStr) {
+            if (!dateStr) return '';
+            const [y, m, d] = dateStr.split('-');
+            return `${d}/${m}/${y}`;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            let grandTotal = 0;
+
+            items.forEach((item, index) => {
+                const total = item.qty * item.harga;
+                grandTotal += total;
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="border border-gray-300 px-3 py-1.5 text-center">${formatDateDisplay(item.tanggal)}</td>
+                    <td class="border border-gray-300 px-3 py-1.5 font-medium">${item.nama}</td>
+                    <td class="border border-gray-300 px-3 py-1.5 text-center">${item.qty}</td>
+                    <td class="border border-gray-300 px-3 py-1.5 text-center">${item.satuan}</td>
+                    <td class="border border-gray-300 px-3 py-1.5 text-right">${Number(item.harga).toLocaleString('id-ID')}</td>
+                    <td class="border border-gray-300 px-3 py-1.5 text-right font-semibold">${Number(total).toLocaleString('id-ID')}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center no-print">
+                        <button onclick="deleteItem(${index})" class="text-red-600 hover:text-red-800 font-bold">✕</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('grandTotal').innerText = formatRupiah(grandTotal);
+            localStorage.setItem('tb_tagihan_items', JSON.stringify(items));
+        }
+
+        document.getElementById('orderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newItem = {
+                tanggal: document.getElementById('inputTanggal').value,
+                nama: document.getElementById('inputNama').value.toUpperCase(),
+                qty: parseFloat(document.getElementById('inputQty').value),
+                satuan: document.getElementById('inputSatuan').value.toUpperCase(),
+                harga: parseFloat(document.getElementById('inputHarga').value)
+            };
+            items.push(newItem);
+            renderTable();
+            this.reset();
+        });
+
+        function deleteItem(index) {
+            items.splice(index, 1);
+            renderTable();
+        }
+
+        function clearAllData() {
+            if (confirm('Apakah Anda yakin ingin menghapus semua data pesanan?')) {
+                items = [];
+                renderTable();
+            }
+        }
+
+        function exportToExcel() {
+            const dataForExcel = items.map(item => ({
+                'TANGGAL': formatDateDisplay(item.tanggal),
+                'NAMA BARANG': item.nama,
+                'QTY': item.qty,
+                'SATUAN': item.satuan,
+                'HARGA': item.harga,
+                'JUMLAH': item.qty * item.harga
+            }));
+            const worksheet = XLSX.utils.json_to_sheet(dataForExcel);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Tagihan");
+            XLSX.writeFile(workbook, "Tagihan_Penjengukan.xlsx");
+        }
+
+        // Set default input tanggal ke hari ini
+        document.getElementById('inputTanggal').value = new Date().toISOString().split('T')[0];
+        
+        // Initial render
+        renderTable();
+    </script>
+</body>
+                  </html>
+                  
